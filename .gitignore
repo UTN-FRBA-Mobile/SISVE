@@ -1,34 +1,37 @@
-# Gradle files
+# Gradle
 .gradle/
-build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
 
-# Local configuration file (sdk path, etc)
+# Local config (ruta del SDK, no commitear)
 local.properties
 
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
+# Android Studio / IntelliJ
+.idea/
+*.iml
 captures/
 .externalNativeBuild/
 .cxx/
-*.aab
+
+# Archivos generados por el build
 *.apk
+*.aab
+*.ap_
 output-metadata.json
+*.hprof
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
-
-# Keystore files
+# Keystores (nunca commitear claves)
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase)
+# Firebase (tiene API keys)
 google-services.json
 
-# Android Profiling
-*.hprof
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Kotlin build cache
+.kotlin/
