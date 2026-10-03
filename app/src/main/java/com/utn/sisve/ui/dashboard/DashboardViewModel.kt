@@ -13,9 +13,9 @@ import javax.inject.Inject
 
 data class DashboardUiState(
     val ambulanceId: String = "",
-    val status: AmbulanceStatus = AmbulanceStatus.LIBRE,
-    val isLoading: Boolean = false,
-    val error: String? = null
+    val operatorName: String = "",
+    val status: AmbulanceStatus = AmbulanceStatus.FUERA_DE_SERVICIO,
+    val isLoading: Boolean = false
 )
 
 @HiltViewModel
@@ -26,13 +26,18 @@ class DashboardViewModel @Inject constructor() : ViewModel() {
 
     fun loadAmbulanceData() {
         // TODO Miembro 4: reemplazar con AmbulanceSession.getAmbulanceId()
-        _uiState.update { it.copy(ambulanceId = "AMB-001") }
+        // TODO Miembro 2: reemplazar con SessionManager.getOperatorName()
+        _uiState.update { it.copy(ambulanceId = "AMB-001", operatorName = "Operador") }
     }
 
-    fun updateStatus(newStatus: AmbulanceStatus) {
+    fun toggleStatus() {
         viewModelScope.launch {
+            val newStatus = when (_uiState.value.status) {
+                AmbulanceStatus.FUERA_DE_SERVICIO -> AmbulanceStatus.EN_SERVICIO
+                AmbulanceStatus.EN_SERVICIO -> AmbulanceStatus.FUERA_DE_SERVICIO
+            }
             _uiState.update { it.copy(status = newStatus, isLoading = true) }
-            // TODO Miembro 6: llamar al repositorio para sincronizar con el servidor
+            // TODO Miembro 6: notificar al servidor el cambio de estado
             _uiState.update { it.copy(isLoading = false) }
         }
     }

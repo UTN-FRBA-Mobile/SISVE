@@ -3,8 +3,6 @@ package com.utn.sisve.ui.dispatch
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,7 +29,7 @@ fun DispatchScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Llamado entrante") },
+                title = { Text("Detalle de Emergencia") },
                 navigationIcon = {
                     IconButton(onClick = onRejected) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -56,47 +54,22 @@ fun DispatchScreen(
 
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
-            ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFC62828))
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = call.emergencyType,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFC62828)
-                        )
-                    }
-                    Text(text = call.description, style = MaterialTheme.typography.bodyMedium)
+            Card(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    DetailRow(label = "Tipo", value = call.emergencyType)
+                    HorizontalDivider()
+                    DetailRow(label = "Ubicación", value = call.address)
+                    HorizontalDivider()
+                    DetailRow(label = "Descripción", value = call.description)
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = "Dirección",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = call.address,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -104,16 +77,36 @@ fun DispatchScreen(
             ) {
                 OutlinedButton(
                     onClick = { viewModel.rejectDispatch(); onRejected() },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(52.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
-                ) { Text("Rechazar", fontWeight = FontWeight.Bold) }
+                ) {
+                    Text("Rechazar", fontWeight = FontWeight.Bold)
+                }
 
                 Button(
                     onClick = { viewModel.acceptDispatch() },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
-                ) { Text("Aceptar", fontWeight = FontWeight.Bold) }
+                ) {
+                    Text("Aceptar", fontWeight = FontWeight.Bold)
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }

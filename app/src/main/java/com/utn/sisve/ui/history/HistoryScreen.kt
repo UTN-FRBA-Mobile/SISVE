@@ -1,4 +1,4 @@
-package com.utn.sisve.ui.map
+package com.utn.sisve.ui.history
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,17 +9,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-// TODO Miembro 5: implementar mapa con ubicación actual y ruta al destino
+// TODO Miembro 3: implementar historial de servicios (lista de llamados aceptados con foto)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(
-    onNavigateBack: () -> Unit,
-    onArrived: () -> Unit = {}
-) {
+fun HistoryScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mapa") },
+                title = { Text("Historial de Servicios") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -31,13 +28,9 @@ fun MapScreen(
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-
+            verticalArrangement = Arrangement.Center
         ) {
-            Text("Pendiente — Miembro 5", style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(16.dp))
-            // Botón temporal para probar el flujo post-arribo
-            OutlinedButton(onClick = onArrived) { Text("Simular llegada a destino") }
+            Text("Pendiente — Miembro 3", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

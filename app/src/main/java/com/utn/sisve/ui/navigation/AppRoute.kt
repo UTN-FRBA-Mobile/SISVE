@@ -6,6 +6,8 @@ sealed class AppRoute(val route: String) {
     object Dashboard : AppRoute("dashboard")
     object Settings : AppRoute("settings")
     object Map : AppRoute("map")
+    object History : AppRoute("history")
+    object PostArrival : AppRoute("post_arrival")
     object Dispatch : AppRoute("dispatch/{callId}") {
         fun createRoute(callId: String) = "dispatch/$callId"
     }

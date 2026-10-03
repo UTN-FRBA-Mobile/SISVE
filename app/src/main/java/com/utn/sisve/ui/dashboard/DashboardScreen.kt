@@ -1,8 +1,11 @@
 package com.utn.sisve.ui.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,140 +17,197 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.utn.sisve.domain.model.AmbulanceStatus
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     onDispatchReceived: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { viewModel.loadAmbulanceData() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("SISVE", fontWeight = FontWeight.Bold)
-                        Text(
-                            text = uiState.ambulanceId,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Configuración")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            StatusCard(status = uiState.status, isLoading = uiState.isLoading)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(Modifier.height(24.dp))
 
-            Text(
-                text = "Cambiar estado",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AmbulanceStatus.entries.forEach { status ->
-                    StatusButton(
-                        status = status,
-                        isSelected = uiState.status == status,
-                        modifier = Modifier.weight(1f),
-                        onClick = { viewModel.updateStatus(status) }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = uiState.operatorName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = uiState.ambulanceId,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                Spacer(Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(8.dp))
+
+                NavigationDrawerItem(
+                    label = { Text("Historial de Servicios") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToHistory()
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Configuración") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToSettings()
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                Spacer(Modifier.weight(1f))
+                HorizontalDivider()
+
+                NavigationDrawerItem(
+                    label = {
+                        Text("Cerrar Sesión", color = MaterialTheme.colorScheme.error)
+                    },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToLogin()
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                )
             }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Botón temporal para probar el flujo de despacho — sacar antes de entregar
-            OutlinedButton(
-                onClick = { onDispatchReceived("TEST-001") },
-                modifier = Modifier.fillMaxWidth()
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("SISVE", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menú")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Simular llamado entrante")
+                Spacer(Modifier.height(16.dp))
+
+                StatusIndicator(
+                    status = uiState.status,
+                    isLoading = uiState.isLoading
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { viewModel.toggleStatus() },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        enabled = !uiState.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = when (uiState.status) {
+                                AmbulanceStatus.FUERA_DE_SERVICIO -> Color(0xFF2E7D32)
+                                AmbulanceStatus.EN_SERVICIO -> Color(0xFFC62828)
+                            }
+                        )
+                    ) {
+                        Text(
+                            text = when (uiState.status) {
+                                AmbulanceStatus.FUERA_DE_SERVICIO -> "Entrar en Servicio"
+                                AmbulanceStatus.EN_SERVICIO -> "Salir de Servicio"
+                            },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
+                        // Botón temporal para simular llamado — sacar antes de entregar
+                        OutlinedButton(
+                            onClick = { onDispatchReceived("TEST-001") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Simular llamado entrante")
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatusCard(status: AmbulanceStatus, isLoading: Boolean) {
-    val (color, containerColor) = when (status) {
-        AmbulanceStatus.LIBRE -> Color(0xFF2E7D32) to Color(0xFFC8E6C9)
-        AmbulanceStatus.OCUPADO -> Color(0xFFC62828) to Color(0xFFFFCDD2)
-        AmbulanceStatus.EN_CAMINO -> Color(0xFFE65100) to Color(0xFFFFE0B2)
+private fun StatusIndicator(status: AmbulanceStatus, isLoading: Boolean) {
+    val (circleColor, textColor, label) = when (status) {
+        AmbulanceStatus.FUERA_DE_SERVICIO -> Triple(
+            Color(0xFFC62828), Color(0xFFC62828), "Fuera de Servicio"
+        )
+        AmbulanceStatus.EN_SERVICIO -> Triple(
+            Color(0xFF2E7D32), Color(0xFF2E7D32), "En Servicio"
+        )
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            modifier = Modifier
+                .size(180.dp)
+                .background(color = circleColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = color)
-            } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Estado actual", fontSize = 12.sp, color = color.copy(alpha = 0.7f))
-                    Text(
-                        text = status.displayName.uppercase(),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = color
-                    )
-                }
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(48.dp))
             }
         }
-    }
-}
 
-@Composable
-private fun StatusButton(
-    status: AmbulanceStatus,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val color = when (status) {
-        AmbulanceStatus.LIBRE -> Color(0xFF2E7D32)
-        AmbulanceStatus.OCUPADO -> Color(0xFFC62828)
-        AmbulanceStatus.EN_CAMINO -> Color(0xFFE65100)
-    }
-    if (isSelected) {
-        Button(
-            onClick = onClick,
-            modifier = modifier,
-            colors = ButtonDefaults.buttonColors(containerColor = color)
-        ) { Text(status.displayName, fontSize = 11.sp) }
-    } else {
-        OutlinedButton(onClick = onClick, modifier = modifier) {
-            Text(status.displayName, fontSize = 11.sp, color = color)
-        }
+        Text(
+            text = label,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
     }
 }

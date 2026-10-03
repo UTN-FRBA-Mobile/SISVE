@@ -1,7 +1,6 @@
 package com.utn.sisve.domain.model
 
 enum class AmbulanceStatus(val displayName: String) {
-    LIBRE("Libre"),
-    OCUPADO("Ocupado"),
-    EN_CAMINO("En camino")
+    FUERA_DE_SERVICIO("Fuera de Servicio"),
+    EN_SERVICIO("En Servicio")
 }
