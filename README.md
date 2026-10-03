@@ -82,7 +82,7 @@ Como parte del proyecto se utilizan distintas APIs y funcionalidades provistas p
 [Completar]
 
 ## 🔀 UserFlow
-![User Flow](docs/userFlow.png)
+![User Flow](docs/UserFlow.png)
 
 
 ## 🚀 Instalación
