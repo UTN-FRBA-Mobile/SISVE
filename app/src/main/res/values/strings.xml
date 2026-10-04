@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SISVE</string>
+    <string name="status_libre">Libre</string>
+    <string name="status_ocupado">Ocupado</string>
+    <string name="status_en_camino">En camino</string>
+    <string name="dispatch_accept">Aceptar</string>
+    <string name="dispatch_reject">Rechazar</string>
+    <string name="notification_channel_tracking">Seguimiento GPS</string>
+    <string name="notification_tracking_title">SISVE activo</string>
+    <string name="notification_tracking_text">Enviando ubicación al servidor</string>
+</resources>
