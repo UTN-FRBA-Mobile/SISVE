@@ -2,6 +2,7 @@ package com.utn.sisve.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.domain.model.AmbulanceStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,16 +21,22 @@ data class DashboardUiState(
 )
 
 @HiltViewModel
-class DashboardViewModel @Inject constructor() : ViewModel() {
+class DashboardViewModel @Inject constructor(
+    private val ambulancePreferences: AmbulancePreferences
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     fun loadAmbulanceData() {
-        // TODO Miembro 4: reemplazar con AmbulanceSession.getAmbulanceId()
-        // TODO Miembro 2: reemplazar con SessionManager.getOperatorName()
-        // TODO Miembro 4: reemplazar con AmbulanceSession.getLicensePlate()
-        _uiState.update { it.copy(ambulanceId = "AMB-001", operatorName = "Operador", licensePlate = "XX NNN XX") }
+        // TODO Miembro 2: reemplazar operatorName con SessionManager.getOperatorName()
+        _uiState.update {
+            it.copy(
+                ambulanceId = ambulancePreferences.getAmbulanceId(),
+                licensePlate = ambulancePreferences.getLicensePlate(),
+                operatorName = "Operador"
+            )
+        }
     }
 
     fun toggleStatus() {

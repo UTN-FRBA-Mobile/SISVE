@@ -1,6 +1,7 @@
 package com.utn.sisve.ui.navigation
 
 sealed class AppRoute(val route: String) {
+    object Setup : AppRoute("setup")
     object Login : AppRoute("login")
     object Camera : AppRoute("camera")
     object Dashboard : AppRoute("dashboard")

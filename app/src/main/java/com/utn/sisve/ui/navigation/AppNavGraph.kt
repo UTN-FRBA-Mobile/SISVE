@@ -15,13 +15,24 @@ import com.utn.sisve.ui.history.HistoryScreen
 import com.utn.sisve.ui.login.LoginScreen
 import com.utn.sisve.ui.map.MapScreen
 import com.utn.sisve.ui.settings.SettingsScreen
+import com.utn.sisve.ui.setup.SetupScreen
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = AppRoute.Login.route
+    startDestination: String = AppRoute.Setup.route
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+
+        composable(AppRoute.Setup.route) {
+            SetupScreen(
+                onSetupComplete = {
+                    navController.navigate(AppRoute.Login.route) {
+                        popUpTo(AppRoute.Setup.route) { inclusive = true }
+                    }
+                }
+            )
+        }
 
         composable(AppRoute.Login.route) {
             LoginScreen(
