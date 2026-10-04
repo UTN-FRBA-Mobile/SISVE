@@ -130,7 +130,11 @@ fun DashboardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Spacer(Modifier.height(16.dp))
+                AmbulanceHeader(
+                    operatorName = uiState.operatorName,
+                    ambulanceId = uiState.ambulanceId,
+                    licensePlate = uiState.licensePlate
+                )
 
                 StatusIndicator(
                     status = uiState.status,
@@ -174,6 +178,30 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AmbulanceHeader(operatorName: String, ambulanceId: String, licensePlate: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = operatorName,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = "Unidad: $ambulanceId",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "Patente: $licensePlate",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

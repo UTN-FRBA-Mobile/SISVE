@@ -14,6 +14,7 @@ import javax.inject.Inject
 data class DashboardUiState(
     val ambulanceId: String = "",
     val operatorName: String = "",
+    val licensePlate: String = "",
     val status: AmbulanceStatus = AmbulanceStatus.FUERA_DE_SERVICIO,
     val isLoading: Boolean = false
 )
@@ -27,7 +28,8 @@ class DashboardViewModel @Inject constructor() : ViewModel() {
     fun loadAmbulanceData() {
         // TODO Miembro 4: reemplazar con AmbulanceSession.getAmbulanceId()
         // TODO Miembro 2: reemplazar con SessionManager.getOperatorName()
-        _uiState.update { it.copy(ambulanceId = "AMB-001", operatorName = "Operador") }
+        // TODO Miembro 4: reemplazar con AmbulanceSession.getLicensePlate()
+        _uiState.update { it.copy(ambulanceId = "AMB-001", operatorName = "Operador", licensePlate = "XX NNN XX") }
     }
 
     fun toggleStatus() {
