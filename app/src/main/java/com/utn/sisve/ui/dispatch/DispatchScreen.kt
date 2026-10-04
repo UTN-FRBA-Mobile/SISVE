@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.utn.sisve.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,10 +31,10 @@ fun DispatchScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de Emergencia") },
+                title = { Text(stringResource(R.string.dispatch_title)) },
                 navigationIcon = {
                     IconButton(onClick = onRejected) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -61,11 +63,11 @@ fun DispatchScreen(
                     modifier = Modifier.fillMaxWidth().padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    DetailRow(label = "Tipo", value = call.emergencyType)
+                    DetailRow(label = stringResource(R.string.dispatch_type), value = call.emergencyType)
                     HorizontalDivider()
-                    DetailRow(label = "Ubicación", value = call.address)
+                    DetailRow(label = stringResource(R.string.dispatch_location), value = call.address)
                     HorizontalDivider()
-                    DetailRow(label = "Descripción", value = call.description)
+                    DetailRow(label = stringResource(R.string.dispatch_description), value = call.description)
                 }
             }
 
@@ -80,7 +82,7 @@ fun DispatchScreen(
                     modifier = Modifier.weight(1f).height(52.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
                 ) {
-                    Text("Rechazar", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.dispatch_reject), fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -88,7 +90,7 @@ fun DispatchScreen(
                     modifier = Modifier.weight(1f).height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                 ) {
-                    Text("Aceptar", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.dispatch_accept), fontWeight = FontWeight.Bold)
                 }
             }
         }

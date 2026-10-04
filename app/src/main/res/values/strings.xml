@@ -1,6 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SISVE</string>
+
+    <!-- Acciones y textos compartidos -->
+    <string name="navigate_back">Volver</string>
+    <string name="open_menu">Menú</string>
+    <string name="continue_temporary">Continuar (temporal)</string>
+    <string name="feature_pending_member">Pendiente — Miembro %1$d</string>
+    <string name="settings_title">Configuración</string>
+    <string name="history_title">Historial de Servicios</string>
+
+    <!-- Configuración inicial -->
+    <string name="setup_title">Configuración de la App</string>
+    <string name="setup_ambulance_id">Id Ambulancia</string>
+    <string name="setup_ambulance_id_hint">Ej: AMB-001</string>
+    <string name="setup_license_plate">Patente</string>
+    <string name="setup_license_plate_hint">Ej: AB 123 CD</string>
+    <string name="setup_required_fields">Completá todos los campos para continuar</string>
+    <string name="setup_continue">Guardar y Continuar</string>
+    <string name="setup_scan_qr">Escanear QR de la ambulancia</string>
+
+    <!-- Login y cámara -->
+    <string name="login_title">Login con PIN</string>
+    <string name="camera_title">Foto de inicio de sesión</string>
+
+    <!-- Dashboard -->
+    <string name="operator_default_name">Operador</string>
+    <string name="logout">Cerrar Sesión</string>
+    <string name="dashboard_enter_service">Entrar en Servicio</string>
+    <string name="dashboard_leave_service">Salir de Servicio</string>
+    <string name="dashboard_simulate_dispatch">Simular llamado entrante</string>
+    <string name="dashboard_unit">Unidad: %1$s</string>
+    <string name="dashboard_license_plate">Patente: %1$s</string>
+    <string name="status_out_of_service">Fuera de Servicio</string>
+    <string name="status_in_service">En Servicio</string>
+
+    <!-- Despacho -->
+    <string name="dispatch_title">Detalle de Emergencia</string>
+    <string name="dispatch_type">Tipo</string>
+    <string name="dispatch_location">Ubicación</string>
+    <string name="dispatch_description">Descripción</string>
+
+    <!-- Datos temporales del despacho simulado; no representan datos del servidor -->
+    <string name="dispatch_sample_address">Av. Corrientes 1234, CABA</string>
+    <string name="dispatch_sample_type">Accidente de tránsito</string>
+    <string name="dispatch_sample_description">Colisión entre dos vehículos, posibles heridos</string>
+
+    <!-- Mapa y llegada -->
+    <string name="map_title">Mapa</string>
+    <string name="map_simulate_arrival">Simular llegada a destino</string>
+    <string name="arrival_title">Emergencia en curso</string>
+    <string name="arrival_new_route">Se muestra nuevo recorrido</string>
+    <string name="arrival_transfer">Destino: traslado a Centro de Salud</string>
+    <string name="arrival_at_destination">Al llegar a destino</string>
+    <string name="arrival_finalize">Finalizar Emergencia</string>
+
     <string name="status_libre">Libre</string>
     <string name="status_ocupado">Ocupado</string>
     <string name="status_en_camino">En camino</string>

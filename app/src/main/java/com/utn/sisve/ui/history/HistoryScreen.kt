@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.utn.sisve.R
 import androidx.compose.ui.unit.dp
 
 // TODO Miembro 3: implementar historial de servicios (lista de llamados aceptados con foto)
@@ -16,10 +18,10 @@ fun HistoryScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial de Servicios") },
+                title = { Text(stringResource(R.string.history_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
                     }
                 }
             )
@@ -30,7 +32,7 @@ fun HistoryScreen(onNavigateBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Pendiente — Miembro 3", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.feature_pending_member, 3), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

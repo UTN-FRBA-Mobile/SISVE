@@ -29,12 +29,11 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     fun loadAmbulanceData() {
-        // TODO Miembro 2: reemplazar operatorName con SessionManager.getOperatorName()
+        // TODO Miembro 2: obtener operatorName de SessionManager; la UI muestra el nombre genérico mientras tanto.
         _uiState.update {
             it.copy(
                 ambulanceId = ambulancePreferences.getAmbulanceId(),
-                licensePlate = ambulancePreferences.getLicensePlate(),
-                operatorName = "Operador"
+                licensePlate = ambulancePreferences.getLicensePlate()
             )
         }
     }

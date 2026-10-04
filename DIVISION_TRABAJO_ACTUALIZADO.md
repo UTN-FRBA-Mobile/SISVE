@@ -1,13 +1,5 @@
 # División de trabajo - SISVE
 
-## ⚠️ Cosas a resolver antes del 5 de octubre (primer avance)
-
-- **Somos 6, el TP dice equipos de 4-5** → hay que consultarle al profe cuanto antes
-- **Primer avance es el 5/10** → mínimamente tener el proyecto base corriendo y 1-2 pantallas funcionando
-- Crear el grupo de Telegram con sufijo ` - DMQ` si no lo tienen
-
----
-
 ## Cómo vamos a trabajar
 
 Cada uno tiene su rama y su módulo separado. Nadie pushea directo a `main`. Todo va a `develop` primero y cuando algo está terminado se hace PR.
