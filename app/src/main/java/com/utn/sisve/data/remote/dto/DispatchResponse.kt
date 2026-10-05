@@ -1,4 +1,4 @@
-package com.utn.sisve.data.remote
+package com.utn.sisve.data.remote.dto
 
 
 /**
@@ -7,7 +7,6 @@ package com.utn.sisve.data.remote
  * @param address Dirección de a donde tiene que ir la ambulancia
  * @param emergencyType Tipo de emergencia (accidente, paro cardíaco, etc..)
  * @param description Descripción del llamado
- * @param timestamp Momento en que se generó el despacho (en milisegundos)
  */
 data class DispatchResponse(
     val id: String,

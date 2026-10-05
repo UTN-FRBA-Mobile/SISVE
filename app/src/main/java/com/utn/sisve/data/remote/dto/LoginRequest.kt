@@ -1,4 +1,4 @@
-package com.utn.sisve.data.remote
+package com.utn.sisve.data.remote.dto
 
 
 

@@ -4,9 +4,9 @@ import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.local.Entity.PendingLocationEntity
 import com.utn.sisve.data.local.db.LocationDao
 import com.utn.sisve.data.remote.ApiService
-import com.utn.sisve.data.remote.DispatchResponse
-import com.utn.sisve.data.remote.LocationRequest
-import com.utn.sisve.data.remote.LoginResponse
+import com.utn.sisve.data.remote.dto.DispatchResponse
+import com.utn.sisve.data.remote.dto.LocationRequest
+import com.utn.sisve.data.remote.dto.LoginResponse
 import com.utn.sisve.domain.model.AmbulanceStatus
 import javax.inject.Inject
 

@@ -1,5 +1,10 @@
 package com.utn.sisve.data.remote
 
+import com.utn.sisve.data.remote.dto.DispatchResponse
+import com.utn.sisve.data.remote.dto.LocationRequest
+import com.utn.sisve.data.remote.dto.LoginRequest
+import com.utn.sisve.data.remote.dto.LoginResponse
+import com.utn.sisve.data.remote.dto.StatusUpdateRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
