@@ -1,10 +1,12 @@
 package com.utn.sisve.data.local.db
 
+import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.utn.sisve.data.local.Entity.PendingLocationEntity
 
+@Dao
 interface LocationDao {
 
     @Insert
