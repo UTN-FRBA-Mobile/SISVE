@@ -70,7 +70,14 @@ fun AppNavGraph(
         }
 
         composable(AppRoute.Settings.route) {
-            SettingsScreen(onNavigateBack = { navController.popBackStack() })
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onAmbulanceReset = {
+                    navController.navigate(AppRoute.Setup.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(
