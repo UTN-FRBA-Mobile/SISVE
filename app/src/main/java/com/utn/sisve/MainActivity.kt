@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.utn.sisve.data.local.AmbulancePreferences
+import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.ui.navigation.AppNavGraph
 import com.utn.sisve.ui.navigation.AppRoute
 import com.utn.sisve.ui.theme.SisveTheme
@@ -15,17 +15,14 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var ambulancePreferences: AmbulancePreferences
+    lateinit var ambulanceSession: AmbulanceSession
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SisveTheme {
-                val startDestination = if (ambulancePreferences.isConfigured()) {
+                val startDestination = if (ambulanceSession.isConfigured()) {
                     AppRoute.Login.route
                 } else {
                     AppRoute.Setup.route
