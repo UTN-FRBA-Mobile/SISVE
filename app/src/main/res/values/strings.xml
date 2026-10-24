@@ -7,6 +7,8 @@
     <string name="open_menu">Menú</string>
     <string name="continue_temporary">Continuar (temporal)</string>
     <string name="feature_pending_member">Pendiente — Miembro %1$d</string>
+    <string name="confirm">Confirmar</string>
+    <string name="cancel">Cancelar</string>
     <string name="settings_title">Configuración</string>
     <string name="history_title">Historial de Servicios</string>
 
@@ -19,6 +21,19 @@
     <string name="setup_required_fields">Completá todos los campos para continuar</string>
     <string name="setup_continue">Guardar y Continuar</string>
     <string name="setup_scan_qr">Escanear QR de la ambulancia</string>
+
+    <!-- Configuración del dispositivo -->
+    <string name="settings_linked_ambulance">Ambulancia Vinculada</string>
+    <string name="settings_ambulance_details">%1$s (%2$s)</string>
+    <string name="settings_server_url">URL Base del Servidor</string>
+    <string name="settings_gps_interval">Frecuencia GPS (segundos)</string>
+    <string name="settings_saved">Configuración guardada exitosamente</string>
+    <string name="settings_save">Guardar Cambios</string>
+    <string name="settings_unlink_ambulance">Desvincular Ambulancia</string>
+    <string name="settings_unlink_title">¿Desvincular ambulancia?</string>
+    <string name="settings_unlink_message">Se borrarán los datos de esta ambulancia en el dispositivo y se solicitará una nueva configuración inicial.</string>
+    <string name="settings_error_empty_server_url">La URL del servidor no puede estar vacía</string>
+    <string name="settings_error_invalid_gps_interval">El intervalo de GPS debe ser mayor a 0 segundos</string>
 
     <!-- Login y cámara -->
     <string name="login_title">Login con PIN</string>

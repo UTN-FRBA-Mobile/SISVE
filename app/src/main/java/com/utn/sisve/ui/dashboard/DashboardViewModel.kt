@@ -2,7 +2,7 @@ package com.utn.sisve.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.utn.sisve.data.local.AmbulancePreferences
+import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.domain.model.AmbulanceStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +22,7 @@ data class DashboardUiState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val ambulancePreferences: AmbulancePreferences
+    private val ambulanceSession: AmbulanceSession
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -32,8 +32,8 @@ class DashboardViewModel @Inject constructor(
         // TODO Miembro 2: obtener operatorName de SessionManager; la UI muestra el nombre genérico mientras tanto.
         _uiState.update {
             it.copy(
-                ambulanceId = ambulancePreferences.getAmbulanceId(),
-                licensePlate = ambulancePreferences.getLicensePlate()
+                ambulanceId = ambulanceSession.getAmbulanceId(),
+                licensePlate = ambulanceSession.getLicensePlate()
             )
         }
     }
