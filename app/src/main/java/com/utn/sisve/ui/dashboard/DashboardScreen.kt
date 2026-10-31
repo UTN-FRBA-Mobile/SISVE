@@ -13,12 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.utn.sisve.R
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.utn.sisve.domain.model.AmbulanceStatus
+import com.utn.sisve.ui.theme.StatusLibre
+import com.utn.sisve.ui.theme.StatusLibreContainer
+import com.utn.sisve.ui.theme.StatusOcupado
+import com.utn.sisve.ui.theme.StatusOcupadoContainer
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,9 +126,9 @@ fun DashboardScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -157,9 +162,10 @@ fun DashboardScreen(
                         enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = when (uiState.status) {
-                                AmbulanceStatus.FUERA_DE_SERVICIO -> Color(0xFF2E7D32)
-                                AmbulanceStatus.EN_SERVICIO -> Color(0xFFC62828)
-                            }
+                                AmbulanceStatus.FUERA_DE_SERVICIO -> StatusLibre
+                                AmbulanceStatus.EN_SERVICIO -> StatusOcupado
+                            },
+                            contentColor = Color.White
                         )
                     ) {
                         Text(
@@ -215,12 +221,18 @@ private fun AmbulanceHeader(operatorName: String, ambulanceId: String, licensePl
 
 @Composable
 private fun StatusIndicator(status: AmbulanceStatus, isLoading: Boolean) {
+    val isDarkSurface = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
     val (circleColor, textColor, label) = when (status) {
         AmbulanceStatus.FUERA_DE_SERVICIO -> Triple(
-            Color(0xFFC62828), Color(0xFFC62828), R.string.status_out_of_service
+            StatusOcupado,
+            if (isDarkSurface) StatusOcupadoContainer else StatusOcupado,
+            R.string.status_out_of_service
         )
         AmbulanceStatus.EN_SERVICIO -> Triple(
-            Color(0xFF2E7D32), Color(0xFF2E7D32), R.string.status_in_service
+            StatusLibre,
+            if (isDarkSurface) StatusLibreContainer else StatusLibre,
+            R.string.status_in_service
         )
     }
 

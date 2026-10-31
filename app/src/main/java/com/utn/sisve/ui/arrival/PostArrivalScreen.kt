@@ -73,7 +73,10 @@ fun PostArrivalScreen(
                     Button(
                         onClick = onFinalizeEmergency,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2E7D32),
+                            contentColor = Color.White
+                        )
                     ) {
                         Text(stringResource(R.string.arrival_finalize), fontWeight = FontWeight.Bold)
                     }

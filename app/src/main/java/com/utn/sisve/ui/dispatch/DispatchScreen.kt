@@ -80,7 +80,7 @@ fun DispatchScreen(
                 OutlinedButton(
                     onClick = { viewModel.rejectDispatch(); onRejected() },
                     modifier = Modifier.weight(1f).height(52.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Text(stringResource(R.string.dispatch_reject), fontWeight = FontWeight.Bold)
                 }
@@ -88,7 +88,10 @@ fun DispatchScreen(
                 Button(
                     onClick = { viewModel.acceptDispatch() },
                     modifier = Modifier.weight(1f).height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2E7D32),
+                        contentColor = Color.White
+                    )
                 ) {
                     Text(stringResource(R.string.dispatch_accept), fontWeight = FontWeight.Bold)
                 }
