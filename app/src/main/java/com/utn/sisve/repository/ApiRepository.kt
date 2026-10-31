@@ -6,6 +6,7 @@ import com.utn.sisve.data.local.db.LocationDao
 import com.utn.sisve.data.remote.ApiService
 import com.utn.sisve.data.remote.dto.DispatchResponse
 import com.utn.sisve.data.remote.dto.LocationRequest
+import com.utn.sisve.data.remote.dto.LoginRequest
 import com.utn.sisve.data.remote.dto.LoginResponse
 import com.utn.sisve.domain.model.AmbulanceStatus
 import javax.inject.Inject
@@ -20,8 +21,7 @@ class ApiRepository @Inject constructor(
     // TODO: Esta mockeado y hardcodeado, modificar cuando este el back
 
     suspend fun login(ambulanceId: String, pin: String): LoginResponse {
-        return LoginResponse(token = "123jlaksjxlz213", ambulanceId = ambulanceId)
-        // return apiService.login(LoginRequest(ambulanceId, pin))
+        return apiService.login(LoginRequest(ambulanceId, pin))
     }
 
     suspend fun sendLocation(latitude: Double, longitude: Double) {

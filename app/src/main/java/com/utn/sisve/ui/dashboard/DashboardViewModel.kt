@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.domain.model.AmbulanceStatus
+import com.utn.sisve.domain.model.SessionState
+import com.utn.sisve.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,20 +24,32 @@ data class DashboardUiState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val ambulanceSession: AmbulanceSession
+    private val ambulanceSession: AmbulanceSession,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     fun loadAmbulanceData() {
-        // TODO Miembro 2: obtener operatorName de SessionManager; la UI muestra el nombre genérico mientras tanto.
+        val activeSession = sessionManager.state.value as? SessionState.Active
+
         _uiState.update {
             it.copy(
                 ambulanceId = ambulanceSession.getAmbulanceId(),
-                licensePlate = ambulanceSession.getLicensePlate()
+                licensePlate = ambulanceSession.getLicensePlate(),
+                operatorName = activeSession?.session?.operatorName.orEmpty()
             )
         }
+    }
+
+    fun logout() {
+        // TODO Miembro 6: enviar FUERA_DE_SERVICIO al servidor antes de eliminar el token.
+        _uiState.update {
+            it.copy(status = AmbulanceStatus.FUERA_DE_SERVICIO, operatorName = "")
+        }
+
+        sessionManager.logout()
     }
 
     fun toggleStatus() {

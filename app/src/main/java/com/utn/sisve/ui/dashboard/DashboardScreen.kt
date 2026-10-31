@@ -100,8 +100,11 @@ fun DashboardScreen(
                     },
                     selected = false,
                     onClick = {
-                        scope.launch { drawerState.close() }
-                        onNavigateToLogin()
+                        scope.launch {
+                            drawerState.close()
+                            viewModel.logout()
+                            onNavigateToLogin()
+                        }
                     },
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                 )

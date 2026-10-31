@@ -91,6 +91,7 @@ fun SettingsScreen(
                     text = stringResource(
                         when (error) {
                             SettingsError.EMPTY_SERVER_URL -> R.string.settings_error_empty_server_url
+                            SettingsError.INVALID_SERVER_URL -> R.string.settings_error_invalid_server_url
                             SettingsError.INVALID_GPS_INTERVAL -> R.string.settings_error_invalid_gps_interval
                         }
                     ),

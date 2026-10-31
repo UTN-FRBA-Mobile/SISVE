@@ -33,10 +33,22 @@
     <string name="settings_unlink_title">¿Desvincular ambulancia?</string>
     <string name="settings_unlink_message">Se borrarán los datos de esta ambulancia en el dispositivo y se solicitará una nueva configuración inicial.</string>
     <string name="settings_error_empty_server_url">La URL del servidor no puede estar vacía</string>
+    <string name="settings_error_invalid_server_url">Ingresá una URL válida con http:// o https://</string>
     <string name="settings_error_invalid_gps_interval">El intervalo de GPS debe ser mayor a 0 segundos</string>
 
     <!-- Login y cámara -->
     <string name="login_title">Login con PIN</string>
+    <string name="login_pin_hint">Ingresá tu PIN de 4 a 6 dígitos</string>
+    <string name="login_pin_length">%1$d de 6 dígitos ingresados</string>
+    <string name="login_submit">Iniciar sesión</string>
+    <string name="login_loading">Iniciando sesión…</string>
+    <string name="login_clear_pin">Limpiar</string>
+    <string name="login_delete_digit">Borrar último dígito</string>
+    <string name="login_error_invalid_pin">Ingresá un PIN de 4 a 6 dígitos.</string>
+    <string name="login_error_credentials">El PIN no es válido para esta ambulancia.</string>
+    <string name="login_error_connection">No se pudo conectar con el servidor. Revisá la conexión y la URL configurada.</string>
+    <string name="login_error_server">El servidor no pudo completar el inicio de sesión. Intentá nuevamente.</string>
+    <string name="login_error_response">La respuesta del servidor no es válida.</string>
     <string name="camera_title">Foto de inicio de sesión</string>
 
     <!-- Dashboard -->
