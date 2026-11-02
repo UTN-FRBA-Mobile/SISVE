@@ -25,7 +25,8 @@ class AmbulancePreferences @Inject constructor(
 
     fun getAmbulanceId(): String = prefs.getString(KEY_AMBULANCE_ID, "") ?: ""
     fun getLicensePlate(): String = prefs.getString(KEY_LICENSE_PLATE, "") ?: ""
-    fun getServerUrl(): String = prefs.getString(KEY_SERVER_URL, DEFAULT_URL) ?: DEFAULT_URL
+    fun getServerUrl(): String = (prefs.getString(KEY_SERVER_URL, DEFAULT_URL) ?: DEFAULT_URL)
+             .trim().trimEnd('/') + "/"
     fun getGpsIntervalSeconds(): Long = prefs.getLong(KEY_GPS_INTERVAL, DEFAULT_GPS_INTERVAL)
 
     fun isConfigured(): Boolean = getAmbulanceId().isNotBlank()
@@ -43,7 +44,7 @@ class AmbulancePreferences @Inject constructor(
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_GPS_INTERVAL = "gps_interval_seconds"
 
-        const val DEFAULT_URL = "http://10.0.2.2:8080/api/v1/"
+        const val DEFAULT_URL = "http://192.168.100.9:8080/api/v1/"
         const val DEFAULT_GPS_INTERVAL = 10L
     }
 }

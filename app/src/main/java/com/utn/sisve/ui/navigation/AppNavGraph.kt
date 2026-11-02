@@ -1,12 +1,18 @@
 package com.utn.sisve.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.utn.sisve.domain.model.SessionState
 import com.utn.sisve.ui.arrival.PostArrivalScreen
 import com.utn.sisve.ui.camera.CameraScreen
 import com.utn.sisve.ui.dashboard.DashboardScreen
@@ -20,8 +26,30 @@ import com.utn.sisve.ui.setup.SetupScreen
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = AppRoute.Setup.route
+    startDestination: String = AppRoute.Setup.route,
+    viewModel: NavigationViewModel = hiltViewModel()
 ) {
+    val session by viewModel.sessionState.collectAsStateWithLifecycle()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+
+    fun navigateToLogin() {
+        navController.navigate(AppRoute.Login.route) {
+            popUpTo(navController.graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    LaunchedEffect(currentRoute, session) {
+        // currentRoute dispara el efecto, pero puede haber cambiado antes de que se ejecute.
+        val route = navController.currentDestination?.route
+        val requiresAuthentication = route != null && route !in AppRoute.publicRoutes
+
+        if (requiresAuthentication && session !is SessionState.Active) {
+            navigateToLogin()
+        }
+    }
+
     NavHost(navController = navController, startDestination = startDestination) {
 
         composable(AppRoute.Setup.route) {
@@ -58,11 +86,7 @@ fun AppNavGraph(
             DashboardScreen(
                 onNavigateToSettings = { navController.navigate(AppRoute.Settings.route) },
                 onNavigateToHistory = { navController.navigate(AppRoute.History.route) },
-                onNavigateToLogin = {
-                    navController.navigate(AppRoute.Login.route) {
-                        popUpTo(AppRoute.Dashboard.route) { inclusive = true }
-                    }
-                },
+                onNavigateToLogin = { navigateToLogin() },
                 onDispatchReceived = { callId ->
                     navController.navigate(AppRoute.Dispatch.createRoute(callId))
                 }

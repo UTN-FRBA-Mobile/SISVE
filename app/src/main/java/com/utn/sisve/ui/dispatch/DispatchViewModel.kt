@@ -1,9 +1,12 @@
 package com.utn.sisve.ui.dispatch
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.utn.sisve.R
 import com.utn.sisve.domain.model.DispatchCall
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +21,9 @@ data class DispatchUiState(
 )
 
 @HiltViewModel
-class DispatchViewModel @Inject constructor() : ViewModel() {
+class DispatchViewModel @Inject constructor(
+    @ApplicationContext private val context: Context
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DispatchUiState())
     val uiState: StateFlow<DispatchUiState> = _uiState.asStateFlow()
@@ -31,9 +36,10 @@ class DispatchViewModel @Inject constructor() : ViewModel() {
                     isLoading = false,
                     call = DispatchCall(
                         id = callId,
-                        address = "Av. Corrientes 1234, CABA",
-                        emergencyType = "Accidente de tránsito",
-                        description = "Colisión entre dos vehículos, posibles heridos"
+                        // Solo para el despacho simulado; los datos reales vendrán del repositorio.
+                        address = context.getString(R.string.dispatch_sample_address),
+                        emergencyType = context.getString(R.string.dispatch_sample_type),
+                        description = context.getString(R.string.dispatch_sample_description)
                     )
                 )
             }

@@ -2,6 +2,8 @@ package com.utn.sisve.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.SystemClock
+import com.utn.sisve.session.SessionClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,4 +19,8 @@ object AppModule {
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences =
         context.getSharedPreferences("sisve_prefs", Context.MODE_PRIVATE)
+
+    @Provides
+    @Singleton
+    fun provideSessionClock(): SessionClock = SessionClock { SystemClock.elapsedRealtime() }
 }

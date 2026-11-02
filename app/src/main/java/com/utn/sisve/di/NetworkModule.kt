@@ -32,7 +32,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, preferences: AmbulancePreferences): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.1:8080/") // TODO: esta hardcodeado.Hay que agregar metodo de obtener el url. Por ejemplo que sea preferences.getServerUrl()
+            .baseUrl(preferences.getServerUrl())
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.utn.sisve.R
 import androidx.compose.ui.unit.dp
 
 // TODO Miembro 5: implementar mapa con ubicación actual y ruta al destino
@@ -19,10 +21,10 @@ fun MapScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mapa") },
+                title = { Text(stringResource(R.string.map_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
                     }
                 }
             )
@@ -34,10 +36,10 @@ fun MapScreen(
             verticalArrangement = Arrangement.Center,
 
         ) {
-            Text("Pendiente — Miembro 5", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.feature_pending_member, 5), style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(16.dp))
             // Botón temporal para probar el flujo post-arribo
-            OutlinedButton(onClick = onArrived) { Text("Simular llegada a destino") }
+            OutlinedButton(onClick = onArrived) { Text(stringResource(R.string.map_simulate_arrival)) }
         }
     }
 }

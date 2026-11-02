@@ -10,13 +10,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.utn.sisve.R
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.utn.sisve.domain.model.AmbulanceStatus
+import com.utn.sisve.ui.theme.StatusLibre
+import com.utn.sisve.ui.theme.StatusLibreContainer
+import com.utn.sisve.ui.theme.StatusOcupado
+import com.utn.sisve.ui.theme.StatusOcupadoContainer
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +36,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val operatorName = uiState.operatorName.ifBlank { stringResource(R.string.operator_default_name) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -54,7 +62,7 @@ fun DashboardScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = uiState.operatorName,
+                        text = operatorName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -70,7 +78,7 @@ fun DashboardScreen(
                 Spacer(Modifier.height(8.dp))
 
                 NavigationDrawerItem(
-                    label = { Text("Historial de Servicios") },
+                    label = { Text(stringResource(R.string.history_title)) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -79,7 +87,7 @@ fun DashboardScreen(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
                 NavigationDrawerItem(
-                    label = { Text("Configuración") },
+                    label = { Text(stringResource(R.string.settings_title)) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -93,12 +101,15 @@ fun DashboardScreen(
 
                 NavigationDrawerItem(
                     label = {
-                        Text("Cerrar Sesión", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.logout), color = MaterialTheme.colorScheme.error)
                     },
                     selected = false,
                     onClick = {
-                        scope.launch { drawerState.close() }
-                        onNavigateToLogin()
+                        scope.launch {
+                            drawerState.close()
+                            viewModel.logout()
+                            onNavigateToLogin()
+                        }
                     },
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                 )
@@ -108,16 +119,16 @@ fun DashboardScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("SISVE", fontWeight = FontWeight.Bold) },
+                    title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menú")
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.open_menu))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -131,7 +142,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 AmbulanceHeader(
-                    operatorName = uiState.operatorName,
+                    operatorName = operatorName,
                     ambulanceId = uiState.ambulanceId,
                     licensePlate = uiState.licensePlate
                 )
@@ -151,16 +162,19 @@ fun DashboardScreen(
                         enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = when (uiState.status) {
-                                AmbulanceStatus.FUERA_DE_SERVICIO -> Color(0xFF2E7D32)
-                                AmbulanceStatus.EN_SERVICIO -> Color(0xFFC62828)
-                            }
+                                AmbulanceStatus.FUERA_DE_SERVICIO -> StatusLibre
+                                AmbulanceStatus.EN_SERVICIO -> StatusOcupado
+                            },
+                            contentColor = Color.White
                         )
                     ) {
                         Text(
-                            text = when (uiState.status) {
-                                AmbulanceStatus.FUERA_DE_SERVICIO -> "Entrar en Servicio"
-                                AmbulanceStatus.EN_SERVICIO -> "Salir de Servicio"
-                            },
+                            text = stringResource(
+                                when (uiState.status) {
+                                    AmbulanceStatus.FUERA_DE_SERVICIO -> R.string.dashboard_enter_service
+                                    AmbulanceStatus.EN_SERVICIO -> R.string.dashboard_leave_service
+                                }
+                            ),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -172,7 +186,7 @@ fun DashboardScreen(
                             onClick = { onDispatchReceived("TEST-001") },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Simular llamado entrante")
+                            Text(stringResource(R.string.dashboard_simulate_dispatch))
                         }
                     }
                 }
@@ -193,12 +207,12 @@ private fun AmbulanceHeader(operatorName: String, ambulanceId: String, licensePl
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            text = "Unidad: $ambulanceId",
+            text = stringResource(R.string.dashboard_unit, ambulanceId),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "Patente: $licensePlate",
+            text = stringResource(R.string.dashboard_license_plate, licensePlate),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -207,12 +221,18 @@ private fun AmbulanceHeader(operatorName: String, ambulanceId: String, licensePl
 
 @Composable
 private fun StatusIndicator(status: AmbulanceStatus, isLoading: Boolean) {
+    val isDarkSurface = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
     val (circleColor, textColor, label) = when (status) {
         AmbulanceStatus.FUERA_DE_SERVICIO -> Triple(
-            Color(0xFFC62828), Color(0xFFC62828), "Fuera de Servicio"
+            StatusOcupado,
+            if (isDarkSurface) StatusOcupadoContainer else StatusOcupado,
+            R.string.status_out_of_service
         )
         AmbulanceStatus.EN_SERVICIO -> Triple(
-            Color(0xFF2E7D32), Color(0xFF2E7D32), "En Servicio"
+            StatusLibre,
+            if (isDarkSurface) StatusLibreContainer else StatusLibre,
+            R.string.status_in_service
         )
     }
 
@@ -232,7 +252,7 @@ private fun StatusIndicator(status: AmbulanceStatus, isLoading: Boolean) {
         }
 
         Text(
-            text = label,
+            text = stringResource(label),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = textColor

@@ -12,4 +12,10 @@ sealed class AppRoute(val route: String) {
     object Dispatch : AppRoute("dispatch/{callId}") {
         fun createRoute(callId: String) = "dispatch/$callId"
     }
+
+    companion object {
+        val publicRoutes: Set<String> by lazy {
+            setOf(Setup.route, Login.route)
+        }
+    }
 }

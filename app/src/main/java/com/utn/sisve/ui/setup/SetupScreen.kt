@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.utn.sisve.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -38,14 +40,14 @@ fun SetupScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "SISVE",
+                text = stringResource(R.string.app_name),
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Configuración de la App",
+                text = stringResource(R.string.setup_title),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -58,8 +60,8 @@ fun SetupScreen(
                     showError = false
                     viewModel.onAmbulanceIdChange(it)
                 },
-                label = { Text("Id Ambulancia") },
-                placeholder = { Text("Ej: AMB-001") },
+                label = { Text(stringResource(R.string.setup_ambulance_id)) },
+                placeholder = { Text(stringResource(R.string.setup_ambulance_id_hint)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
@@ -77,8 +79,8 @@ fun SetupScreen(
                     showError = false
                     viewModel.onLicensePlateChange(it)
                 },
-                label = { Text("Patente") },
-                placeholder = { Text("Ej: AB 123 CD") },
+                label = { Text(stringResource(R.string.setup_license_plate)) },
+                placeholder = { Text(stringResource(R.string.setup_license_plate_hint)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
@@ -91,7 +93,7 @@ fun SetupScreen(
             if (showError) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Completá todos los campos para continuar",
+                    text = stringResource(R.string.setup_required_fields),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -106,7 +108,7 @@ fun SetupScreen(
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("Guardar y Continuar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.setup_continue), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -117,7 +119,7 @@ fun SetupScreen(
             ) {
                 Icon(Icons.Default.QrCode, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Escanear QR de la ambulancia")
+                Text(stringResource(R.string.setup_scan_qr))
             }
         }
     }

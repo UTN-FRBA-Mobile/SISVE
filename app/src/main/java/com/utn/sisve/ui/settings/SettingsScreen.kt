@@ -7,12 +7,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.utn.sisve.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,10 +29,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configuración", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
                     }
                 }
             )
@@ -52,13 +54,13 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Ambulancia Vinculada",
+                        text = stringResource(R.string.settings_linked_ambulance),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${uiState.ambulanceId} (${uiState.licensePlate})",
+                        text = stringResource(R.string.settings_ambulance_details, uiState.ambulanceId, uiState.licensePlate),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -69,7 +71,7 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = uiState.serverUrl,
                 onValueChange = viewModel::onServerUrlChange,
-                label = { Text("URL Base del Servidor") },
+                label = { Text(stringResource(R.string.settings_server_url)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -78,15 +80,21 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = uiState.gpsIntervalSeconds,
                 onValueChange = viewModel::onGpsIntervalChange,
-                label = { Text("Frecuencia GPS (segundos)") },
+                label = { Text(stringResource(R.string.settings_gps_interval)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            uiState.errorMessage?.let { error ->
+            uiState.error?.let { error ->
                 Text(
-                    text = error,
+                    text = stringResource(
+                        when (error) {
+                            SettingsError.EMPTY_SERVER_URL -> R.string.settings_error_empty_server_url
+                            SettingsError.INVALID_SERVER_URL -> R.string.settings_error_invalid_server_url
+                            SettingsError.INVALID_GPS_INTERVAL -> R.string.settings_error_invalid_gps_interval
+                        }
+                    ),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -94,7 +102,7 @@ fun SettingsScreen(
 
             if (uiState.isSavedSuccess) {
                 Text(
-                    text = "Configuración guardada exitosamente",
+                    text = stringResource(R.string.settings_saved),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -104,7 +112,7 @@ fun SettingsScreen(
                 onClick = { viewModel.saveSettings() },
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
-                Text("Guardar Cambios", fontSize = 16.sp)
+                Text(stringResource(R.string.settings_save), fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -117,7 +125,7 @@ fun SettingsScreen(
                 ),
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
-                Text("Desvincular Ambulancia")
+                Text(stringResource(R.string.settings_unlink_ambulance))
             }
         }
     }
@@ -125,8 +133,8 @@ fun SettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("¿Desvincular ambulancia?") },
-            text = { Text("Se borrarán los datos de esta ambulancia en el dispositivo y se solicitará una nueva configuración inicial.") },
+            title = { Text(stringResource(R.string.settings_unlink_title)) },
+            text = { Text(stringResource(R.string.settings_unlink_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -134,12 +142,12 @@ fun SettingsScreen(
                         viewModel.resetAmbulance(onAmbulanceReset)
                     }
                 ) {
-                    Text("Confirmar", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.confirm), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
