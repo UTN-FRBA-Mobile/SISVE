@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 @Singleton
 class SessionManager @Inject constructor(
@@ -17,8 +17,8 @@ class SessionManager @Inject constructor(
     private val _state = MutableStateFlow<SessionState>(SessionState.Unauthenticated)
     val state: StateFlow<SessionState> = _state.asStateFlow()
 
-    // Provisional: solo en memoria hasta incorporar el almacenamiento protegido.
-    // Nunca exponer el token dentro del estado que observa la interfaz.
+    // El token solo vive en memoria y se pierde al terminar el proceso.
+    // Nunca exponerlo dentro del estado que observa la interfaz.
     @Volatile
     private var token: String? = null
 
@@ -76,7 +76,19 @@ class SessionManager @Inject constructor(
         lockSession(AmbulanceStatus.FUERA_DE_SERVICIO)
     }
 
-    // Llamar al volver a primer plano y periódicamente mientras la app esté visible.
+    // Tiempo restante del reloj monotónico para programar el bloqueo sin polling.
+    @Synchronized
+    fun remainingInactivityMillis(): Long? {
+        val lastInteraction = lastInteractionMillis ?: return null
+
+        if (_state.value !is SessionState.Active) {
+            return null
+        }
+
+        return (INACTIVITY_TIMEOUT_MILLIS - (clock.nowMillis() - lastInteraction)).coerceAtLeast(0L)
+    }
+
+    // Llamar al volver a primer plano y al vencer el tiempo restante.
     // Devuelve true solo cuando esta comprobación acaba de bloquear la sesión.
     @Synchronized
     fun checkExpiration(ambulanceStatus: AmbulanceStatus): Boolean {
@@ -93,7 +105,6 @@ class SessionManager @Inject constructor(
         }
 
         lockSession(ambulanceStatus)
-
         return true
     }
 
@@ -111,6 +122,6 @@ class SessionManager @Inject constructor(
     }
 
     companion object {
-        private val INACTIVITY_TIMEOUT_MILLIS = 8.hours.inWholeMilliseconds
+        private val INACTIVITY_TIMEOUT_MILLIS = 30.seconds.inWholeMilliseconds
     }
 }

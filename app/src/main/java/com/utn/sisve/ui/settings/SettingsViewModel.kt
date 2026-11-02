@@ -2,6 +2,8 @@ package com.utn.sisve.ui.settings
 
 import androidx.lifecycle.ViewModel
 import com.utn.sisve.data.local.AmbulancePreferences
+import com.utn.sisve.data.local.AmbulanceStatusStore
+import com.utn.sisve.domain.model.AmbulanceStatus
 import com.utn.sisve.domain.model.SessionState
 import com.utn.sisve.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +32,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferences: AmbulancePreferences,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val ambulanceStatusStore: AmbulanceStatusStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -106,6 +109,7 @@ class SettingsViewModel @Inject constructor(
         }
 
         preferences.clearAmbulance()
+        ambulanceStatusStore.setStatus(AmbulanceStatus.FUERA_DE_SERVICIO)
         sessionManager.logout()
 
         onResetComplete()
