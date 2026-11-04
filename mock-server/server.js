@@ -10,7 +10,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 const app = createApp();
 
 const server = app.listen(port, host, () => {
-  console.log(`Mock SISVE disponible en http://${host}:${port} (solo desarrollo/demo)`);
+  console.log(`Mock SISVE disponible en http://${host}:${port}`);
 });
 
 server.on('error', (error) => {

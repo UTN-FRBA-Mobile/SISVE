@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import express from 'express';
 import { demoUsers } from './demo-users.js';
 import { requestLogger } from './request-logger.js';
+import { registerLoginPhotos } from './login-photos.js';
 
 export function createApp({ users = demoUsers } = {}) {
   const usersByAmbulance = new Map();
@@ -79,6 +80,8 @@ export function createApp({ users = demoUsers } = {}) {
       operator,
     });
   });
+
+  registerLoginPhotos(app, sessions);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Endpoint no Implementado.' });

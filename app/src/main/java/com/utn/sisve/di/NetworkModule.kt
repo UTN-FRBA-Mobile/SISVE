@@ -7,6 +7,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -22,9 +23,19 @@ object NetworkModule {
     fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY  // TODO: quitar fuera de dev
-            })
+            .addInterceptor { chain ->
+                val logging = HttpLoggingInterceptor().apply {
+                    // No volcar el JPEG entero en Logcat; conservar BODY para el resto del mock.
+                    // TODO: limitar el logging fuera de desarrollo.
+                    level = if (chain.request().body is MultipartBody) {
+                        HttpLoggingInterceptor.Level.HEADERS
+                    } else {
+                        HttpLoggingInterceptor.Level.BODY
+                    }
+                }
+
+                logging.intercept(chain)
+            }
             .build()
     }
 

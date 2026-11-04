@@ -82,6 +82,12 @@ dependencies {
     // Mapa (OpenStreetMap, sin API key)
     implementation(libs.osmdroid)
 
+    // CameraX: cámara frontal y vista previa del registro de acceso.
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 

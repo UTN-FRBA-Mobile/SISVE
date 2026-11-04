@@ -100,7 +100,7 @@ Abrir el proyecto desde Android Studio y esperar a que Gradle sincronice las dep
 
 Luego seleccionar un dispositivo físico o emulador y ejecutar la aplicación.
 
-Para correr el servidor mock de login (Node.js 22+): `cd mock-server && npm ci && npm start`; API base en `http://127.0.0.1:8080/api/v1/`. Usuarios de demo en `mock-server/demo-users.js` (por ejemplo, `AMB-001` / `123456`).
+Para correr el servidor mock de login y fotos (Node.js 22+): `cd mock-server && npm ci && npm start`; API base en `http://127.0.0.1:8080/api/v1/`. Usuarios de demo en `mock-server/demo-users.js` (por ejemplo, `AMB-001` / `123456`). Las fotos se guardan en `mock-server/uploads/` (ignorada por Git).
 
 ## 📄 Licencia
 Este proyecto se distribuye bajo la licencia MIT.
