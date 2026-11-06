@@ -3,6 +3,7 @@ package com.utn.sisve.ui.map
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.DashPathEffect
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
@@ -18,7 +19,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.utn.sisve.R
 import com.utn.sisve.location.GeoCoord
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -38,6 +39,8 @@ import java.io.File
 fun SisveMap(
     current: GeoCoord?,
     destination: GeoCoord?,
+    path: List<GeoCoord>,
+    pathFollowsStreets: Boolean,
     currentLabel: String,
     destinationLabel: String,
     follow: Boolean,
@@ -81,8 +84,8 @@ fun SisveMap(
             val currentPoint = current?.toGeoPoint()
             val destinationPoint = destination?.toGeoPoint()
 
-            if (currentPoint != null && destinationPoint != null) {
-                map.overlays.add(route(currentPoint, destinationPoint))
+            if (path.size >= 2) {
+                map.overlays.add(route(path.map { it.toGeoPoint() }, dashed = !pathFollowsStreets))
             }
             destinationPoint?.let {
                 map.overlays.add(marker(map, it, destinationLabel, R.drawable.ic_marker_emergency, Marker.ANCHOR_BOTTOM))
@@ -121,12 +124,27 @@ private fun marker(map: MapView, point: GeoPoint, title: String, icon: Int, anch
         setAnchor(Marker.ANCHOR_CENTER, anchorY)
     }
 
-private fun route(from: GeoPoint, to: GeoPoint) = Polyline().apply {
-    setPoints(listOf(from, to))
+// Por calles: línea continua. Sin recorrido disponible: línea recta punteada.
+private fun route(points: List<GeoPoint>, dashed: Boolean) = Polyline().apply {
+    setPoints(points)
     outlinePaint.color = Color.parseColor("#1565C0")
-    outlinePaint.strokeWidth = 10f
-    outlinePaint.pathEffect = DashPathEffect(floatArrayOf(30f, 20f), 0f)
+    outlinePaint.strokeWidth = 14f
+    outlinePaint.strokeCap = Paint.Cap.ROUND
+    outlinePaint.strokeJoin = Paint.Join.ROUND
+    if (dashed) outlinePaint.pathEffect = DashPathEffect(floatArrayOf(30f, 20f), 0f)
 }
+
+// Estilo claro con calles y nombres, sin íconos de comercios ni puntos de interés.
+// Datos de OpenStreetMap; los tiles los sirve CARTO (atribución obligatoria, ver MapScreen).
+private val CLEAN_TILES = XYTileSource(
+    "CartoPositron", 0, 20, 256, ".png",
+    arrayOf(
+        "https://a.basemaps.cartocdn.com/light_all/",
+        "https://b.basemaps.cartocdn.com/light_all/",
+        "https://c.basemaps.cartocdn.com/light_all/"
+    ),
+    "© OpenStreetMap contributors © CARTO"
+)
 
 private fun createMapView(context: Context): MapView {
     Configuration.getInstance().apply {
@@ -136,7 +154,7 @@ private fun createMapView(context: Context): MapView {
         osmdroidTileCache = File(context.cacheDir, "osmdroid/tiles")
     }
     return MapView(context).apply {
-        setTileSource(TileSourceFactory.MAPNIK)
+        setTileSource(CLEAN_TILES)
         setMultiTouchControls(true)
         // Tiles escalados a la densidad de pantalla: calles y textos más legibles.
         isTilesScaledToDpi = true

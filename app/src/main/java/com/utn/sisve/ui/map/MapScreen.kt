@@ -57,6 +57,8 @@ fun MapScreen(
                 SisveMap(
                     current = state.current,
                     destination = state.destination,
+                    path = state.path,
+                    pathFollowsStreets = state.pathFollowsStreets,
                     currentLabel = stringResource(R.string.map_current_position),
                     destinationLabel = state.destinationAddress ?: stringResource(R.string.map_destination),
                     follow = state.follow,
@@ -75,6 +77,13 @@ fun MapScreen(
                         )
                     }
                 }
+                // Atribución exigida por las licencias de OpenStreetMap y CARTO.
+                Text(
+                    text = stringResource(R.string.map_attribution),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
+                )
                 // Resaltado mientras el mapa sigue a la ambulancia; al arrastrar el mapa se apaga.
                 SmallFloatingActionButton(
                     onClick = viewModel::recenter,

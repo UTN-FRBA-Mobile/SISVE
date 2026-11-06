@@ -40,4 +40,7 @@ class AndroidAddressGeocoder @Inject constructor(
 abstract class LocationModule {
     @Binds
     abstract fun bindGeocoder(impl: AndroidAddressGeocoder): AddressGeocoder
+
+    @Binds
+    abstract fun bindRouteProvider(impl: OsrmRouteProvider): RouteProvider
 }

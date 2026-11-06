@@ -106,5 +106,6 @@
     <string name="map_destination">Destino</string>
     <string name="map_waiting_location">Esperando ubicación GPS…</string>
     <string name="map_recenter">Centrar en mi ubicación</string>
+    <string name="map_attribution">© OpenStreetMap contributors © CARTO</string>
     <string name="map_distance">Distancia al destino: %1$s</string>
 </resources>
