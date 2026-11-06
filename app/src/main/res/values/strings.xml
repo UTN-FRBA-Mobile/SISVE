@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SISVE</string>
+
+    <!-- Acciones y textos compartidos -->
+    <string name="navigate_back">Volver</string>
+    <string name="open_menu">Menú</string>
+    <string name="continue_temporary">Continuar (temporal)</string>
+    <string name="feature_pending_member">Pendiente — Miembro %1$d</string>
+    <string name="confirm">Confirmar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="settings_title">Configuración</string>
+    <string name="history_title">Historial de Servicios</string>
+
+    <!-- Configuración inicial -->
+    <string name="setup_title">Configuración de la App</string>
+    <string name="setup_ambulance_id">Id Ambulancia</string>
+    <string name="setup_ambulance_id_hint">Ej: AMB-001</string>
+    <string name="setup_license_plate">Patente</string>
+    <string name="setup_license_plate_hint">Ej: AB 123 CD</string>
+    <string name="setup_required_fields">Completá todos los campos para continuar</string>
+    <string name="setup_continue">Guardar y Continuar</string>
+    <string name="setup_scan_qr">Escanear QR de la ambulancia</string>
+
+    <!-- Configuración del dispositivo -->
+    <string name="settings_linked_ambulance">Ambulancia Vinculada</string>
+    <string name="settings_ambulance_details">%1$s (%2$s)</string>
+    <string name="settings_server_url">URL Base del Servidor</string>
+    <string name="settings_gps_interval">Frecuencia GPS (segundos)</string>
+    <string name="settings_saved">Configuración guardada exitosamente</string>
+    <string name="settings_save">Guardar Cambios</string>
+    <string name="settings_unlink_ambulance">Desvincular Ambulancia</string>
+    <string name="settings_unlink_title">¿Desvincular ambulancia?</string>
+    <string name="settings_unlink_message">Se borrarán los datos de esta ambulancia en el dispositivo y se solicitará una nueva configuración inicial.</string>
+    <string name="settings_error_empty_server_url">La URL del servidor no puede estar vacía</string>
+    <string name="settings_error_invalid_server_url">Ingresá una URL válida con http:// o https://</string>
+    <string name="settings_error_invalid_gps_interval">El intervalo de GPS debe ser mayor a 0 segundos</string>
+
+    <!-- Login y cámara -->
+    <string name="login_title">Login con PIN</string>
+    <string name="login_pin_hint">Ingresá tu PIN de 4 a 6 dígitos</string>
+    <string name="login_pin_length">%1$d de 6 dígitos ingresados</string>
+    <string name="login_submit">Iniciar sesión</string>
+    <string name="login_loading">Iniciando sesión…</string>
+    <string name="login_clear_pin">Limpiar</string>
+    <string name="login_delete_digit">Borrar último dígito</string>
+    <string name="login_error_invalid_pin">Ingresá un PIN de 4 a 6 dígitos.</string>
+    <string name="login_error_credentials">El PIN no es válido para esta ambulancia.</string>
+    <string name="login_error_connection">No se pudo conectar con el servidor. Revisá la conexión y la URL configurada.</string>
+    <string name="login_error_server">El servidor no pudo completar el inicio de sesión. Intentá nuevamente.</string>
+    <string name="login_error_response">La respuesta del servidor no es válida.</string>
+    <string name="camera_title">Foto de inicio de sesión</string>
+
+    <!-- Dashboard -->
+    <string name="operator_default_name">Operador</string>
+    <string name="logout">Cerrar Sesión</string>
+    <string name="dashboard_enter_service">Entrar en Servicio</string>
+    <string name="dashboard_leave_service">Salir de Servicio</string>
+    <string name="dashboard_simulate_dispatch">Simular llamado entrante</string>
+    <string name="dashboard_unit">Unidad: %1$s</string>
+    <string name="dashboard_license_plate">Patente: %1$s</string>
+    <string name="status_out_of_service">Fuera de Servicio</string>
+    <string name="status_in_service">En Servicio</string>
+
+    <!-- Despacho -->
+    <string name="dispatch_title">Detalle de Emergencia</string>
+    <string name="dispatch_type">Tipo</string>
+    <string name="dispatch_location">Ubicación</string>
+    <string name="dispatch_description">Descripción</string>
+
+    <!-- Datos temporales del despacho simulado; no representan datos del servidor -->
+    <string name="dispatch_sample_address">Av. Corrientes 1234, CABA</string>
+    <string name="dispatch_sample_type">Accidente de tránsito</string>
+    <string name="dispatch_sample_description">Colisión entre dos vehículos, posibles heridos</string>
+
+    <!-- Mapa y llegada -->
+    <string name="map_title">Mapa</string>
+    <string name="map_simulate_arrival">Simular llegada a destino</string>
+    <string name="arrival_title">Emergencia en curso</string>
+    <string name="arrival_new_route">Se muestra nuevo recorrido</string>
+    <string name="arrival_transfer">Destino: traslado a Centro de Salud</string>
+    <string name="arrival_at_destination">Al llegar a destino</string>
+    <string name="arrival_finalize">Finalizar Emergencia</string>
+
+    <string name="status_libre">Libre</string>
+    <string name="status_ocupado">Ocupado</string>
+    <string name="status_en_camino">En camino</string>
+    <string name="dispatch_accept">Aceptar</string>
+    <string name="dispatch_reject">Rechazar</string>
+    <string name="notification_channel_tracking">Seguimiento GPS</string>
+    <string name="notification_tracking_title">SISVE activo</string>
+    <string name="notification_tracking_text">Enviando ubicación al servidor</string>
+    <string name="notification_gps_off">GPS desactivado: activalo para enviar tu ubicación</string>
+    <string name="notification_action_leave">Salir de servicio</string>
+
+    <!-- Permisos y GPS -->
+    <string name="location_permission_title">Permiso de ubicación necesario</string>
+    <string name="location_permission_message">Para entrar en servicio la app necesita acceder a tu ubicación. Habilitala desde los ajustes de la aplicación.</string>
+    <string name="gps_disabled_warning">El GPS está desactivado. No se puede enviar la ubicación de la ambulancia.</string>
+    <string name="gps_open_settings">Abrir ajustes de ubicación</string>
+
+    <!-- Mapa -->
+    <string name="map_gps_off">GPS desactivado: la posición no se está actualizando.</string>
+    <string name="map_destination_not_found">No se pudo ubicar la dirección en el mapa.</string>
+    <string name="map_current_position">Ambulancia</string>
+    <string name="map_destination">Destino</string>
+    <string name="map_waiting_location">Esperando ubicación GPS…</string>
+    <string name="map_recenter">Centrar en mi ubicación</string>
+    <string name="map_route_following">Siguiendo la ruta</string>
+    <string name="map_route_calculating">Calculando ruta…</string>
+    <string name="map_route_recalculating">Recalculando ruta…</string>
+    <string name="map_route_unavailable">Sin ruta: línea recta</string>
+    <string name="map_attribution">© OpenStreetMap contributors © CARTO</string>
+    <string name="map_distance">Distancia al destino: %1$s</string>
+</resources>

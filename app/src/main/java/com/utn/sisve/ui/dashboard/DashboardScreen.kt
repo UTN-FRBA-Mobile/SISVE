@@ -1,0 +1,336 @@
+package com.utn.sisve.ui.dashboard
+
+import android.Manifest
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.utn.sisve.R
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.utn.sisve.domain.model.AmbulanceStatus
+import com.utn.sisve.ui.theme.StatusLibre
+import com.utn.sisve.ui.theme.StatusLibreContainer
+import com.utn.sisve.ui.theme.StatusOcupado
+import com.utn.sisve.ui.theme.StatusOcupadoContainer
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardScreen(
+    onNavigateToSettings: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onDispatchReceived: (String) -> Unit,
+    viewModel: DashboardViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val operatorName = uiState.operatorName.ifBlank { stringResource(R.string.operator_default_name) }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { viewModel.loadAmbulanceData() }
+
+    val context = LocalContext.current
+    val gpsEnabled by viewModel.gpsEnabled.collectAsStateWithLifecycle()
+    var showPermissionDenied by remember { mutableStateOf(false) }
+
+    // Paso 2: ubicación en segundo plano (Android 10+ exige pedirla aparte). Si se rechaza,
+    // el servicio igual funciona porque se inicia con la app visible.
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { viewModel.toggleStatus() }
+
+    // Paso 1: ubicación precisa y notificaciones.
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        if (result[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            } else {
+                viewModel.toggleStatus()
+            }
+        } else {
+            showPermissionDenied = true
+        }
+    }
+
+    fun onToggleClicked() {
+        if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
+            viewModel.toggleStatus()
+            return
+        }
+        val permissions = buildList {
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        permissionsLauncher.launch(permissions.toTypedArray())
+    }
+
+    if (showPermissionDenied) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDenied = false },
+            title = { Text(stringResource(R.string.location_permission_title)) },
+            text = { Text(stringResource(R.string.location_permission_message)) },
+            confirmButton = {
+                TextButton(onClick = { showPermissionDenied = false }) {
+                    Text(stringResource(R.string.confirm))
+                }
+            }
+        )
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(Modifier.height(24.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = operatorName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = uiState.ambulanceId,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(8.dp))
+
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.history_title)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToHistory()
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.settings_title)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToSettings()
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                Spacer(Modifier.weight(1f))
+                HorizontalDivider()
+
+                NavigationDrawerItem(
+                    label = {
+                        Text(stringResource(R.string.logout), color = MaterialTheme.colorScheme.error)
+                    },
+                    selected = false,
+                    onClick = {
+                        scope.launch {
+                            drawerState.close()
+                            viewModel.logout()
+                            onNavigateToLogin()
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.open_menu))
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                AmbulanceHeader(
+                    operatorName = operatorName,
+                    ambulanceId = uiState.ambulanceId,
+                    licensePlate = uiState.licensePlate
+                )
+
+                StatusIndicator(
+                    status = uiState.status,
+                    isLoading = uiState.isLoading
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { onToggleClicked() },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        enabled = !uiState.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = when (uiState.status) {
+                                AmbulanceStatus.FUERA_DE_SERVICIO -> StatusLibre
+                                AmbulanceStatus.EN_SERVICIO -> StatusOcupado
+                            },
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(
+                                when (uiState.status) {
+                                    AmbulanceStatus.FUERA_DE_SERVICIO -> R.string.dashboard_enter_service
+                                    AmbulanceStatus.EN_SERVICIO -> R.string.dashboard_leave_service
+                                }
+                            ),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (uiState.status == AmbulanceStatus.EN_SERVICIO && !gpsEnabled) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(
+                                    stringResource(R.string.gps_disabled_warning),
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                TextButton(onClick = {
+                                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                                }) { Text(stringResource(R.string.gps_open_settings)) }
+                            }
+                        }
+                    }
+
+                    if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
+                        // Botón temporal para simular llamado — sacar antes de entregar
+                        OutlinedButton(
+                            onClick = { onDispatchReceived("TEST-001") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.dashboard_simulate_dispatch))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AmbulanceHeader(operatorName: String, ambulanceId: String, licensePlate: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = operatorName,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = stringResource(R.string.dashboard_unit, ambulanceId),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = stringResource(R.string.dashboard_license_plate, licensePlate),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun StatusIndicator(status: AmbulanceStatus, isLoading: Boolean) {
+    val isDarkSurface = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+
+    val (circleColor, textColor, label) = when (status) {
+        AmbulanceStatus.FUERA_DE_SERVICIO -> Triple(
+            StatusOcupado,
+            if (isDarkSurface) StatusOcupadoContainer else StatusOcupado,
+            R.string.status_out_of_service
+        )
+        AmbulanceStatus.EN_SERVICIO -> Triple(
+            StatusLibre,
+            if (isDarkSurface) StatusLibreContainer else StatusLibre,
+            R.string.status_in_service
+        )
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(180.dp)
+                .background(color = circleColor, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(48.dp))
+            }
+        }
+
+        Text(
+            text = stringResource(label),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}

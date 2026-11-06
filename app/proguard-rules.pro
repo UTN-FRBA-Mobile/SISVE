@@ -1,0 +1,2 @@
+-keep class com.utn.sisve.data.remote.** { *; }
+-keep class com.utn.sisve.domain.model.** { *; }
