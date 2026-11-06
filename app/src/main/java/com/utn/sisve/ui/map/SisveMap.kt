@@ -16,10 +16,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.utn.sisve.BuildConfig
 import com.utn.sisve.R
 import com.utn.sisve.location.GeoCoord
 import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.tileprovider.tilesource.XYTileSource
+import org.osmdroid.util.MapTileIndex
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -135,16 +138,24 @@ private fun route(points: List<GeoPoint>, dashed: Boolean) = Polyline().apply {
 }
 
 // Estilo claro con calles y nombres, sin íconos de comercios ni puntos de interés.
-// Datos de OpenStreetMap; los tiles los sirve CARTO (atribución obligatoria, ver MapScreen).
-private val CLEAN_TILES = XYTileSource(
-    "CartoPositron", 0, 20, 256, ".png",
-    arrayOf(
-        "https://a.basemaps.cartocdn.com/light_all/",
-        "https://b.basemaps.cartocdn.com/light_all/",
-        "https://c.basemaps.cartocdn.com/light_all/"
-    ),
-    "© OpenStreetMap contributors © CARTO"
-)
+// Datos de OpenStreetMap; los tiles los sirve CARTO y exigen key (atribución obligatoria, ver MapScreen).
+// Sin key configurada se usa el estilo estándar de OSM para que el mapa nunca quede inutilizable.
+private val MAP_TILES = if (BuildConfig.CARTO_API_KEY.isBlank()) {
+    TileSourceFactory.MAPNIK
+} else {
+    object : XYTileSource(
+        // El nombre identifica el caché en disco: cambiarlo descarta tiles viejos (p. ej. los de "API KEY REQUIRED").
+        "CartoLightKeyed", 0, 20, 256, ".png",
+        arrayOf("https://basemaps.cartocdn.com/rastertiles/light_all/"),
+        "© OpenStreetMap contributors © CARTO"
+    ) {
+        // La key va solo en la URL; no se guarda en el nombre de los archivos del caché.
+        override fun getTileURLString(pMapTileIndex: Long): String =
+            "https://basemaps.cartocdn.com/rastertiles/light_all/" +
+                "${MapTileIndex.getZoom(pMapTileIndex)}/${MapTileIndex.getX(pMapTileIndex)}/" +
+                "${MapTileIndex.getY(pMapTileIndex)}.png?key=${BuildConfig.CARTO_API_KEY}"
+    }
+}
 
 private fun createMapView(context: Context): MapView {
     Configuration.getInstance().apply {
@@ -154,7 +165,7 @@ private fun createMapView(context: Context): MapView {
         osmdroidTileCache = File(context.cacheDir, "osmdroid/tiles")
     }
     return MapView(context).apply {
-        setTileSource(CLEAN_TILES)
+        setTileSource(MAP_TILES)
         setMultiTouchControls(true)
         // Tiles escalados a la densidad de pantalla: calles y textos más legibles.
         isTilesScaledToDpi = true

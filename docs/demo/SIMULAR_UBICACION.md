@@ -1,5 +1,12 @@
 # Simular la ubicación en el emulador (demo)
 
+## Key del mapa (CARTO)
+El estilo limpio del mapa necesita una key de CARTO. **No se commitea**: cada integrante la agrega en su `local.properties` (raíz del proyecto, ignorado por git):
+```
+CARTO_API_KEY=la_key_del_grupo
+```
+Sin key la app igual funciona, pero usa el estilo estándar de OpenStreetMap (con íconos de comercios). Después de agregarla hay que volver a compilar.
+
 La app usa `LocationManager` con el proveedor GPS, así que funciona con cualquier imagen del emulador.
 
 ## Ubicación fija
