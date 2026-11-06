@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.core.content.ContextCompat
+import android.graphics.Color
+import android.graphics.DashPathEffect
+import com.utn.sisve.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -15,6 +19,7 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
@@ -65,10 +70,14 @@ fun SisveMap(
             val destinationPoint = destination?.toGeoPoint()
 
             if (currentPoint != null && destinationPoint != null) {
-                map.overlays.add(Polyline().apply { setPoints(listOf(currentPoint, destinationPoint)) })
+                map.overlays.add(route(currentPoint, destinationPoint))
             }
-            destinationPoint?.let { map.overlays.add(marker(map, it, destinationLabel)) }
-            currentPoint?.let { map.overlays.add(marker(map, it, currentLabel)) }
+            destinationPoint?.let {
+                map.overlays.add(marker(map, it, destinationLabel, R.drawable.ic_marker_emergency, Marker.ANCHOR_BOTTOM))
+            }
+            currentPoint?.let {
+                map.overlays.add(marker(map, it, currentLabel, R.drawable.ic_marker_ambulance, Marker.ANCHOR_CENTER))
+            }
 
             val needsFit = destinationPoint != null && currentPoint != null && !camera.fitted
             when {
@@ -103,10 +112,19 @@ private class CameraState {
 
 private fun GeoCoord.toGeoPoint() = GeoPoint(latitude, longitude)
 
-private fun marker(map: MapView, point: GeoPoint, title: String) = Marker(map).apply {
-    position = point
-    this.title = title
-    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+private fun marker(map: MapView, point: GeoPoint, title: String, icon: Int, anchorY: Float) =
+    Marker(map).apply {
+        position = point
+        this.title = title
+        this.icon = ContextCompat.getDrawable(map.context, icon)
+        setAnchor(Marker.ANCHOR_CENTER, anchorY)
+    }
+
+private fun route(from: GeoPoint, to: GeoPoint) = Polyline().apply {
+    setPoints(listOf(from, to))
+    outlinePaint.color = Color.parseColor("#1565C0")
+    outlinePaint.strokeWidth = 10f
+    outlinePaint.pathEffect = DashPathEffect(floatArrayOf(30f, 20f), 0f)
 }
 
 private fun createMapView(context: Context): MapView {
@@ -119,6 +137,11 @@ private fun createMapView(context: Context): MapView {
     return MapView(context).apply {
         setTileSource(TileSourceFactory.MAPNIK)
         setMultiTouchControls(true)
+        // Tiles escalados a la densidad de pantalla: calles y textos más legibles.
+        isTilesScaledToDpi = true
+        minZoomLevel = 3.0
+        maxZoomLevel = 19.0
+        zoomController.setVisibility(CustomZoomButtonsController.Visibility.ALWAYS)
         controller.setZoom(15.0)
     }
 }
