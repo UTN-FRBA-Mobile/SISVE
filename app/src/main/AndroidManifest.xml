@@ -29,7 +29,11 @@
             </intent-filter>
         </activity>
 
-        <!-- TODO Miembro 5: registrar el ForegroundService acá -->
+        <service
+            android:name=".service.LocationService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
         <!-- TODO Miembro 3: registrar el FirebaseMessagingService acá -->
 
     </application>

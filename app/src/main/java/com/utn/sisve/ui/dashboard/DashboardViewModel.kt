@@ -6,6 +6,8 @@ import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.data.local.AmbulanceStatusStore
 import com.utn.sisve.domain.model.AmbulanceStatus
 import com.utn.sisve.domain.model.SessionState
+import com.utn.sisve.location.ActiveDispatchStore
+import com.utn.sisve.location.LocationStore
 import com.utn.sisve.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +29,9 @@ data class DashboardUiState(
 class DashboardViewModel @Inject constructor(
     private val ambulanceSession: AmbulanceSession,
     private val sessionManager: SessionManager,
-    private val ambulanceStatusStore: AmbulanceStatusStore
+    private val ambulanceStatusStore: AmbulanceStatusStore,
+    locationStore: LocationStore,
+    activeDispatchStore: ActiveDispatchStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -35,8 +39,12 @@ class DashboardViewModel @Inject constructor(
     )
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    val gpsEnabled: StateFlow<Boolean> = locationStore.gpsEnabled
+
     // Actualizar estado segun ambulanceStatusStore.
     init {
+        // Al volver al dashboard no hay emergencia en curso.
+        activeDispatchStore.clear()
         viewModelScope.launch {
             ambulanceStatusStore.status.collect { status ->
                 _uiState.update { it.copy(status = status) }

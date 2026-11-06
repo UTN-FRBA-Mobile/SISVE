@@ -69,6 +69,9 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
 
+    // Mapa (OpenStreetMap, sin API key)
+    implementation(libs.osmdroid)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 

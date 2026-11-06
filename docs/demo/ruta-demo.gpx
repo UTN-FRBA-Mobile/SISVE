@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="SISVE" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Ruta demo SISVE - Av. Corrientes (CABA)</name>
+    <trkseg>
+      <trkpt lat="-34.6037" lon="-58.4207"><time>2026-01-01T12:00:00Z</time></trkpt>
+      <trkpt lat="-34.6038" lon="-58.415"><time>2026-01-01T12:00:05Z</time></trkpt>
+      <trkpt lat="-34.6039" lon="-58.4098"><time>2026-01-01T12:00:10Z</time></trkpt>
+      <trkpt lat="-34.604" lon="-58.404"><time>2026-01-01T12:00:15Z</time></trkpt>
+      <trkpt lat="-34.6041" lon="-58.399"><time>2026-01-01T12:00:20Z</time></trkpt>
+      <trkpt lat="-34.6042" lon="-58.394"><time>2026-01-01T12:00:25Z</time></trkpt>
+      <trkpt lat="-34.6042" lon="-58.3905"><time>2026-01-01T12:00:30Z</time></trkpt>
+      <trkpt lat="-34.604" lon="-58.3873"><time>2026-01-01T12:00:35Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

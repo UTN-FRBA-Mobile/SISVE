@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.utn.sisve.R
 import com.utn.sisve.domain.model.DispatchCall
+import com.utn.sisve.location.ActiveDispatchStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ data class DispatchUiState(
 
 @HiltViewModel
 class DispatchViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val activeDispatchStore: ActiveDispatchStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DispatchUiState())
@@ -49,6 +51,8 @@ class DispatchViewModel @Inject constructor(
     fun acceptDispatch() {
         viewModelScope.launch {
             // TODO Miembro 6: notificar al servidor que se aceptó el despacho
+            // El mapa toma el destino de este despacho.
+            _uiState.value.call?.let(activeDispatchStore::set)
             _uiState.update { it.copy(isAccepted = true) }
         }
     }

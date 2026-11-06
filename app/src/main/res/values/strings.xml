@@ -90,4 +90,21 @@
     <string name="notification_channel_tracking">Seguimiento GPS</string>
     <string name="notification_tracking_title">SISVE activo</string>
     <string name="notification_tracking_text">Enviando ubicación al servidor</string>
+    <string name="notification_gps_off">GPS desactivado: activalo para enviar tu ubicación</string>
+    <string name="notification_action_leave">Salir de servicio</string>
+
+    <!-- Permisos y GPS -->
+    <string name="location_permission_title">Permiso de ubicación necesario</string>
+    <string name="location_permission_message">Para entrar en servicio la app necesita acceder a tu ubicación. Habilitala desde los ajustes de la aplicación.</string>
+    <string name="gps_disabled_warning">El GPS está desactivado. No se puede enviar la ubicación de la ambulancia.</string>
+    <string name="gps_open_settings">Abrir ajustes de ubicación</string>
+
+    <!-- Mapa -->
+    <string name="map_gps_off">GPS desactivado: la posición no se está actualizando.</string>
+    <string name="map_destination_not_found">No se pudo ubicar la dirección en el mapa.</string>
+    <string name="map_current_position">Ambulancia</string>
+    <string name="map_destination">Destino</string>
+    <string name="map_waiting_location">Esperando ubicación GPS…</string>
+    <string name="map_recenter">Centrar en mi ubicación</string>
+    <string name="map_distance">Distancia al destino: %1$s</string>
 </resources>
