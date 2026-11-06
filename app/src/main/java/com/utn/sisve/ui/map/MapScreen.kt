@@ -59,23 +59,27 @@ fun MapScreen(
                     destination = state.destination,
                     path = state.path,
                     pathFollowsStreets = state.pathFollowsStreets,
+                    bearing = state.bearing,
                     currentLabel = stringResource(R.string.map_current_position),
                     destinationLabel = state.destinationAddress ?: stringResource(R.string.map_destination),
                     follow = state.follow,
                     onUserPan = viewModel::onUserPan,
                     modifier = Modifier.fillMaxSize()
                 )
-                if (state.current == null) {
-                    Surface(
-                        modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 4.dp
-                    ) {
-                        Text(
-                            stringResource(R.string.map_waiting_location),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                Column(
+                    modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (state.current == null) {
+                        Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
+                            Text(
+                                stringResource(R.string.map_waiting_location),
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                        }
                     }
+                    state.routeStatus?.let { RouteStatusChip(it) }
                 }
                 // Atribución exigida por las licencias de OpenStreetMap y CARTO.
                 Text(
@@ -121,3 +125,48 @@ fun MapScreen(
 private fun formatDistance(meters: Float): String =
     if (meters >= 1000f) String.format(java.util.Locale.getDefault(), "%.1f km", meters / 1000f)
     else "${meters.toInt()} m"
+
+// Cartel chico que indica si la ambulancia sigue la ruta o si se está calculando una nueva.
+@Composable
+private fun RouteStatusChip(status: RouteStatus) {
+    val (label, container, content) = when (status) {
+        RouteStatus.FOLLOWING -> Triple(
+            R.string.map_route_following,
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        RouteStatus.CALCULATING -> Triple(
+            R.string.map_route_calculating,
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer
+        )
+        RouteStatus.RECALCULATING -> Triple(
+            R.string.map_route_recalculating,
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer
+        )
+        RouteStatus.UNAVAILABLE -> Triple(
+            R.string.map_route_unavailable,
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer
+        )
+    }
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = container,
+        contentColor = content,
+        tonalElevation = 2.dp,
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (status == RouteStatus.CALCULATING || status == RouteStatus.RECALCULATING) {
+                CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = content)
+            }
+            Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}

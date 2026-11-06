@@ -22,8 +22,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// Estado del recorrido hacia el destino, para el cartel del mapa.
+enum class RouteStatus { FOLLOWING, CALCULATING, RECALCULATING, UNAVAILABLE }
+
 data class MapUiState(
     val current: GeoCoord? = null,
+    val bearing: Float? = null,
     val destination: GeoCoord? = null,
     val destinationAddress: String? = null,
     val destinationNotFound: Boolean = false,
@@ -31,6 +35,7 @@ data class MapUiState(
     // Tramo que falta recorrer: por calles si hay recorrido, o línea recta como alternativa.
     val path: List<GeoCoord> = emptyList(),
     val pathFollowsStreets: Boolean = false,
+    val routeStatus: RouteStatus? = null,
     val distanceMeters: Float? = null,
     val follow: Boolean = true
 )
@@ -49,30 +54,34 @@ class MapViewModel @Inject constructor(
         val notFound: Boolean = false
     )
 
+    private data class RouteState(
+        val route: List<GeoCoord> = emptyList(),
+        val follow: Boolean = true,
+        val requesting: Boolean = false,
+        val failed: Boolean = false
+    )
+
     private val destination = MutableStateFlow(DestinationState())
-    private val follow = MutableStateFlow(true)
-    private val fullRoute = MutableStateFlow<List<GeoCoord>>(emptyList())
+    private val routeState = MutableStateFlow(RouteState())
 
     private var routeJob: Job? = null
     private var lastRouteAttemptMillis = 0L
 
     private val dispatch = activeDispatchStore.dispatch
 
-    private val routeAndFollow = combine(fullRoute, follow) { route, follow -> route to follow }
-
     val uiState: StateFlow<MapUiState> = combine(
         locationStore.lastFix,
         locationStore.gpsEnabled,
         dispatch,
         destination,
-        routeAndFollow
-    ) { fix, gpsEnabled, call, dest, (route, follow) ->
+        routeState
+    ) { fix, gpsEnabled, call, dest, rs ->
         val current = fix?.coord
-        val snap = current?.let { RouteMath.snap(it, route) }
+        val snap = current?.let { RouteMath.snap(it, rs.route) }
         val onRoute = snap != null && snap.distanceMeters <= OFF_ROUTE_METERS
 
         val path = when {
-            current != null && onRoute -> listOf(current) + route.drop(snap!!.segmentIndex + 1)
+            current != null && onRoute -> listOf(current) + rs.route.drop(snap!!.segmentIndex + 1)
             current != null && dest.coord != null -> listOf(current, dest.coord)
             else -> emptyList()
         }
@@ -81,17 +90,26 @@ class MapViewModel @Inject constructor(
             onRoute -> RouteMath.length(path).toFloat()
             else -> straightDistance(path.first(), path.last())
         }
+        val status = when {
+            dest.coord == null || current == null -> null
+            onRoute -> RouteStatus.FOLLOWING
+            rs.failed && !rs.requesting -> RouteStatus.UNAVAILABLE
+            rs.route.isEmpty() -> RouteStatus.CALCULATING
+            else -> RouteStatus.RECALCULATING
+        }
 
         MapUiState(
             current = current,
+            bearing = fix?.bearing,
             destination = dest.coord,
             destinationAddress = call?.address,
             destinationNotFound = dest.notFound,
             gpsEnabled = gpsEnabled,
             path = path,
             pathFollowsStreets = onRoute,
+            routeStatus = status,
             distanceMeters = distance,
-            follow = follow
+            follow = rs.follow
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MapUiState())
 
@@ -102,7 +120,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             dispatch.collect { call ->
                 routeJob?.cancel()
-                fullRoute.value = emptyList()
+                routeState.update { it.copy(route = emptyList(), requesting = false, failed = false) }
                 lastRouteAttemptMillis = 0L
                 destination.value = DestinationState()
                 if (call != null) {
@@ -117,22 +135,33 @@ class MapViewModel @Inject constructor(
             combine(locationStore.lastFix.filterNotNull(), destination) { fix, dest -> fix.coord to dest.coord }
                 .collect { (current, target) ->
                     if (target == null) return@collect
-                    val offRoute = (RouteMath.snap(current, fullRoute.value)?.distanceMeters ?: Double.MAX_VALUE) >
-                        OFF_ROUTE_METERS
+                    val offRoute =
+                        (RouteMath.snap(current, routeState.value.route)?.distanceMeters ?: Double.MAX_VALUE) >
+                            OFF_ROUTE_METERS
                     val now = System.currentTimeMillis()
                     if (offRoute && routeJob?.isActive != true && now - lastRouteAttemptMillis > RETRY_MILLIS) {
                         lastRouteAttemptMillis = now
-                        routeJob = launch {
-                            routeProvider.route(current, target)?.let { fullRoute.value = it }
-                        }
+                        routeJob = launch { requestRoute(current, target) }
                     }
                 }
         }
     }
 
-    fun recenter() { follow.value = true }
+    private suspend fun requestRoute(from: GeoCoord, to: GeoCoord) {
+        routeState.update { it.copy(requesting = true) }
+        try {
+            val route = routeProvider.route(from, to)
+            routeState.update {
+                if (route != null) it.copy(route = route, failed = false) else it.copy(failed = true)
+            }
+        } finally {
+            routeState.update { it.copy(requesting = false) }
+        }
+    }
 
-    fun onUserPan() { follow.value = false }
+    fun recenter() = routeState.update { it.copy(follow = true) }
+
+    fun onUserPan() = routeState.update { it.copy(follow = false) }
 
     override fun onCleared() {
         // Al cerrar el mapa se vuelve al intervalo configurado para ahorrar batería.

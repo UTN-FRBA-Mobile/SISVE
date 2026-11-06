@@ -7,5 +7,7 @@ data class GeoCoord(val latitude: Double, val longitude: Double)
 data class GeoFix(
     val coord: GeoCoord,
     val accuracyMeters: Float,
-    val timestamp: Long
+    val timestamp: Long,
+    // Rumbo de avance en grados (0 = norte), o null si todavía no se movió lo suficiente.
+    val bearing: Float? = null
 )

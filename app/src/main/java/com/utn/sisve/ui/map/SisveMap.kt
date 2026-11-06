@@ -1,5 +1,6 @@
 package com.utn.sisve.ui.map
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
@@ -36,6 +37,8 @@ import java.io.File
  *
  * Con [follow] activo la cámara se mantiene centrada en la ambulancia mientras se mueve.
  * Si el usuario arrastra el mapa se llama a [onUserPan] para que quien lo use desactive el seguimiento.
+ * Con [follow] el mapa también rota para que el frente de la ambulancia ([bearing]) apunte hacia arriba;
+ * sin seguimiento vuelve a tener el norte arriba.
  */
 @SuppressLint("ClickableViewAccessibility")
 @Composable
@@ -44,6 +47,7 @@ fun SisveMap(
     destination: GeoCoord?,
     path: List<GeoCoord>,
     pathFollowsStreets: Boolean,
+    bearing: Float?,
     currentLabel: String,
     destinationLabel: String,
     follow: Boolean,
@@ -66,6 +70,7 @@ fun SisveMap(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+            camera.animator?.cancel()
             mapView.onDetach()
         }
     }
@@ -107,6 +112,9 @@ fun SisveMap(
                     camera.lastCentered = currentPoint
                 }
             }
+            // Rotación: el rumbo hacia arriba mientras se sigue; norte arriba al explorar.
+            if (!follow) rotateTo(map, camera, 0f)
+            else if (bearing != null) rotateTo(map, camera, -bearing)
             map.invalidate()
         }
     )
@@ -115,7 +123,26 @@ fun SisveMap(
 private class CameraState {
     var zoomed = false
     var lastCentered: GeoPoint? = null
+    var targetOrientation = 0f
+    var animator: ValueAnimator? = null
 }
+
+// Gira el mapa por el camino más corto, con animación para que no pegue saltos.
+private fun rotateTo(map: MapView, camera: CameraState, target: Float) {
+    val from = map.mapOrientation
+    val delta = ((target - from) % 360f + 540f) % 360f - 180f
+    if (kotlin.math.abs(delta) < MIN_ROTATION_DEGREES || kotlin.math.abs(target - camera.targetOrientation) < 0.5f) return
+    camera.targetOrientation = target
+    camera.animator?.cancel()
+    camera.animator = ValueAnimator.ofFloat(0f, delta).apply {
+        duration = ROTATION_MILLIS
+        addUpdateListener { map.mapOrientation = from + it.animatedValue as Float }
+        start()
+    }
+}
+
+private const val MIN_ROTATION_DEGREES = 2f
+private const val ROTATION_MILLIS = 700L
 
 private fun GeoCoord.toGeoPoint() = GeoPoint(latitude, longitude)
 
