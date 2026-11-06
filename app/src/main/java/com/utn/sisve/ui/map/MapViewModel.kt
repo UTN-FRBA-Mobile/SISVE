@@ -7,6 +7,7 @@ import com.utn.sisve.location.ActiveDispatchStore
 import com.utn.sisve.location.AddressGeocoder
 import com.utn.sisve.location.GeoCoord
 import com.utn.sisve.location.LocationStore
+import com.utn.sisve.location.LocationTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,14 +25,15 @@ data class MapUiState(
     val destinationNotFound: Boolean = false,
     val gpsEnabled: Boolean = true,
     val distanceMeters: Float? = null,
-    val recenterTick: Int = 0
+    val follow: Boolean = true
 )
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
     locationStore: LocationStore,
     activeDispatchStore: ActiveDispatchStore,
-    private val geocoder: AddressGeocoder
+    private val geocoder: AddressGeocoder,
+    private val tracker: LocationTracker
 ) : ViewModel() {
 
     private data class DestinationState(
@@ -40,7 +42,7 @@ class MapViewModel @Inject constructor(
     )
 
     private val destination = MutableStateFlow(DestinationState())
-    private val recenterTick = MutableStateFlow(0)
+    private val follow = MutableStateFlow(true)
 
     private val dispatch = activeDispatchStore.dispatch
 
@@ -49,8 +51,8 @@ class MapViewModel @Inject constructor(
         locationStore.gpsEnabled,
         dispatch,
         destination,
-        recenterTick
-    ) { fix, gpsEnabled, call, dest, tick ->
+        follow
+    ) { fix, gpsEnabled, call, dest, follow ->
         val current = fix?.coord
         MapUiState(
             current = current,
@@ -59,11 +61,14 @@ class MapViewModel @Inject constructor(
             destinationNotFound = dest.notFound,
             gpsEnabled = gpsEnabled,
             distanceMeters = if (current != null && dest.coord != null) distance(current, dest.coord) else null,
-            recenterTick = tick
+            follow = follow
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MapUiState())
 
     init {
+        // Con el mapa abierto la posición se actualiza cada segundo para verla en tiempo real.
+        tracker.setHighFrequency(true)
+
         viewModelScope.launch {
             dispatch.collect { call ->
                 destination.value = DestinationState()
@@ -75,7 +80,15 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun recenter() = recenterTick.update { it + 1 }
+    fun recenter() { follow.value = true }
+
+    fun onUserPan() { follow.value = false }
+
+    override fun onCleared() {
+        // Al cerrar el mapa se vuelve al intervalo configurado para ahorrar batería.
+        tracker.setHighFrequency(false)
+        super.onCleared()
+    }
 
     private fun distance(a: GeoCoord, b: GeoCoord): Float {
         val result = FloatArray(1)

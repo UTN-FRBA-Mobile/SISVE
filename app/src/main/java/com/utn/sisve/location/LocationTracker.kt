@@ -20,6 +20,8 @@ class LocationTracker @Inject constructor(
 ) {
     private val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private var started = false
+    private var baseIntervalMillis = 0L
+    private var highFrequency = false
 
     private val listener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
@@ -44,16 +46,35 @@ class LocationTracker @Inject constructor(
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
     }
 
-    @SuppressLint("MissingPermission")
     @Synchronized
     fun start(intervalMillis: Long) {
         if (started) return
+        baseIntervalMillis = intervalMillis
+        register(seedLastKnown = true)
+    }
+
+    // Con el mapa visible se pide una lectura por segundo; si no, el intervalo configurado.
+    @Synchronized
+    fun setHighFrequency(enabled: Boolean) {
+        if (highFrequency == enabled) return
+        highFrequency = enabled
+        if (started) {
+            manager.removeUpdates(listener)
+            started = false
+            register(seedLastKnown = false)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun register(seedLastKnown: Boolean) {
         try {
             store.setGpsEnabled(manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-            manager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let(listener::onLocationChanged)
+            if (seedLastKnown) {
+                manager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let(listener::onLocationChanged)
+            }
             manager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                intervalMillis,
+                if (highFrequency) HIGH_FREQUENCY_MILLIS else baseIntervalMillis,
                 0f,
                 listener,
                 Looper.getMainLooper()
@@ -73,6 +94,11 @@ class LocationTracker @Inject constructor(
         if (!started) return
         manager.removeUpdates(listener)
         started = false
+        highFrequency = false
         store.reset()
+    }
+
+    private companion object {
+        const val HIGH_FREQUENCY_MILLIS = 1_000L
     }
 }

@@ -59,7 +59,8 @@ fun MapScreen(
                     destination = state.destination,
                     currentLabel = stringResource(R.string.map_current_position),
                     destinationLabel = state.destinationAddress ?: stringResource(R.string.map_destination),
-                    recenterTick = state.recenterTick,
+                    follow = state.follow,
+                    onUserPan = viewModel::onUserPan,
                     modifier = Modifier.fillMaxSize()
                 )
                 if (state.current == null) {
@@ -74,8 +75,13 @@ fun MapScreen(
                         )
                     }
                 }
+                // Resaltado mientras el mapa sigue a la ambulancia; al arrastrar el mapa se apaga.
                 SmallFloatingActionButton(
                     onClick = viewModel::recenter,
+                    containerColor = if (state.follow) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (state.follow) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
                 ) {
                     Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.map_recenter))

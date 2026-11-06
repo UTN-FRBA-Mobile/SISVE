@@ -80,7 +80,12 @@ class LocationService : Service() {
     }
 
     private fun sendFixes() = scope.launch {
+        val sendIntervalMillis = preferences.getGpsIntervalSeconds().coerceAtLeast(1L) * 1000L
+        var lastSentAt = 0L
         store.lastFix.filterNotNull().collect { fix ->
+            // Con el mapa abierto el GPS lee cada segundo, pero al servidor se envía según la configuración.
+            if (fix.timestamp - lastSentAt < sendIntervalMillis) return@collect
+            lastSentAt = fix.timestamp
             // sendLocation guarda en Room si no hay red; luego se reintentan los pendientes.
             repository.sendLocation(fix.coord.latitude, fix.coord.longitude)
             repository.sendPendingLocations()

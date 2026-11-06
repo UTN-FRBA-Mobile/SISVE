@@ -1,23 +1,24 @@
 package com.utn.sisve.ui.map
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
+import android.graphics.DashPathEffect
+import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import androidx.core.content.ContextCompat
-import android.graphics.Color
-import android.graphics.DashPathEffect
-import com.utn.sisve.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.utn.sisve.R
 import com.utn.sisve.location.GeoCoord
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -29,15 +30,18 @@ import java.io.File
  * Único archivo que conoce la librería de mapas (osmdroid / OpenStreetMap).
  * Para cambiar de proveedor (Google Maps, MapBox) alcanza con reescribir este composable.
  *
- * [recenterTick]: cada vez que cambia, la cámara vuelve a centrarse.
+ * Con [follow] activo la cámara se mantiene centrada en la ambulancia mientras se mueve.
+ * Si el usuario arrastra el mapa se llama a [onUserPan] para que quien lo use desactive el seguimiento.
  */
+@SuppressLint("ClickableViewAccessibility")
 @Composable
 fun SisveMap(
     current: GeoCoord?,
     destination: GeoCoord?,
     currentLabel: String,
     destinationLabel: String,
-    recenterTick: Int,
+    follow: Boolean,
+    onUserPan: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -62,7 +66,15 @@ fun SisveMap(
 
     AndroidView(
         modifier = modifier,
-        factory = { mapView },
+        factory = {
+            mapView.apply {
+                setOnTouchListener { _, event ->
+                    // Solo un arrastre real del usuario corta el seguimiento (no los movimientos programáticos).
+                    if (event.actionMasked == MotionEvent.ACTION_MOVE) onUserPan()
+                    false
+                }
+            }
+        },
         update = { map ->
             map.overlays.clear()
 
@@ -79,24 +91,14 @@ fun SisveMap(
                 map.overlays.add(marker(map, it, currentLabel, R.drawable.ic_marker_ambulance, Marker.ANCHOR_CENTER))
             }
 
-            val needsFit = destinationPoint != null && currentPoint != null && !camera.fitted
-            when {
-                needsFit -> {
-                    map.post {
-                        map.zoomToBoundingBox(
-                            BoundingBox.fromGeoPoints(listOf(currentPoint, destinationPoint)),
-                            true,
-                            120
-                        )
-                    }
-                    camera.fitted = true
-                    camera.lastTick = recenterTick
+            if (follow && currentPoint != null) {
+                if (!camera.zoomed) {
+                    map.controller.setZoom(17.0)
+                    camera.zoomed = true
                 }
-                currentPoint != null && (!camera.centered || camera.lastTick != recenterTick) -> {
-                    map.controller.setZoom(16.0)
+                if (camera.lastCentered != currentPoint) {
                     map.controller.animateTo(currentPoint)
-                    camera.centered = true
-                    camera.lastTick = recenterTick
+                    camera.lastCentered = currentPoint
                 }
             }
             map.invalidate()
@@ -105,9 +107,8 @@ fun SisveMap(
 }
 
 private class CameraState {
-    var centered = false
-    var fitted = false
-    var lastTick = 0
+    var zoomed = false
+    var lastCentered: GeoPoint? = null
 }
 
 private fun GeoCoord.toGeoPoint() = GeoPoint(latitude, longitude)
