@@ -3,8 +3,12 @@ import express from 'express';
 import { demoUsers } from './demo-users.js';
 import { requestLogger } from './request-logger.js';
 import { registerLoginPhotos } from './login-photos.js';
+import { registerServiceRequests, ServiceRequestStore } from './service-requests.js';
 
-export function createApp({ users = demoUsers } = {}) {
+export function createApp({
+  users = demoUsers,
+  serviceRequestStore = new ServiceRequestStore(),
+} = {}) {
   const usersByAmbulance = new Map();
 
   for (const user of users) {
@@ -82,6 +86,7 @@ export function createApp({ users = demoUsers } = {}) {
   });
 
   registerLoginPhotos(app, sessions);
+  registerServiceRequests(app, serviceRequestStore, sessions);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Endpoint no Implementado.' });
@@ -98,6 +103,7 @@ export function createApp({ users = demoUsers } = {}) {
       return res.status(413).json({ error: 'Solicitud demasiado grande.' });
     }
 
+    console.error('Error interno del mock:', error);
     return res.status(500).json({ error: 'Error interno del mock.' });
   });
 
