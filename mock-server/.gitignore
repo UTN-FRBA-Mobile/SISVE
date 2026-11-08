@@ -4,3 +4,4 @@ uploads/
 data/service-requests.json
 data/service-requests.json.*.tmp
 *.test.js
+key/

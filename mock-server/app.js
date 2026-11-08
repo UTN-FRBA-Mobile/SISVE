@@ -1,9 +1,22 @@
 import { randomBytes } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import express from 'express';
+import { initializeApp, cert } from 'firebase-admin/app';
 import { demoUsers } from './demo-users.js';
 import { requestLogger } from './request-logger.js';
 import { registerLoginPhotos } from './login-photos.js';
 import { registerServiceRequests, ServiceRequestStore } from './service-requests.js';
+
+const serviceAccountUrl = new URL('./key/serviceAccountKey.json', import.meta.url);
+if (existsSync(serviceAccountUrl)) {
+  const serviceAccount = JSON.parse(readFileSync(serviceAccountUrl));
+  initializeApp({
+    credential: cert(serviceAccount),
+  });
+  console.log('[Firebase] Firebase Admin SDK inicializado correctamente.');
+} else {
+  console.warn('[Firebase] Aviso: serviceAccountKey.json no fue encontrado.');
+}
 
 export function createApp({
   users = demoUsers,
