@@ -124,7 +124,11 @@ class MapViewModel @Inject constructor(
                 lastRouteAttemptMillis = 0L
                 destination.value = DestinationState()
                 if (call != null) {
-                    val coord = geocoder.locate(call.address)
+                    val coord = if (call.latitude != null && call.longitude != null) {
+                        GeoCoord(call.latitude, call.longitude)
+                    } else {
+                        geocoder.locate(call.address)
+                    }
                     destination.update { DestinationState(coord = coord, notFound = coord == null) }
                 }
             }

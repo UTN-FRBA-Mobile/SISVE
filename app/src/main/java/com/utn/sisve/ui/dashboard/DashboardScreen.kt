@@ -255,15 +255,7 @@ fun DashboardScreen(
                         }
                     }
 
-                    if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
-                        // Botón temporal para simular llamado — sacar antes de entregar
-                        OutlinedButton(
-                            onClick = { onDispatchReceived("TEST-001") },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.dashboard_simulate_dispatch))
-                        }
-                    }
+
                 }
             }
         }

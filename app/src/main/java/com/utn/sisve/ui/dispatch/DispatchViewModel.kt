@@ -47,7 +47,9 @@ class DispatchViewModel @Inject constructor(
                         address = context.getString(R.string.dispatch_sample_address),
                         emergencyType = context.getString(R.string.dispatch_sample_type),
                         description = context.getString(R.string.dispatch_sample_description),
-                        priority = "ALTA"
+                        priority = "ALTA",
+                        latitude = -34.5981,
+                        longitude = -58.4202
                     )
                 } else {
                     apiRepository.getDispatch(callId).let { dispatch ->
@@ -56,7 +58,9 @@ class DispatchViewModel @Inject constructor(
                             address = dispatch.address,
                             emergencyType = dispatch.emergencyType,
                             description = dispatch.description,
-                            priority = dispatch.priority ?: "ALTA"
+                            priority = dispatch.priority ?: "ALTA",
+                            latitude = dispatch.latitude,
+                            longitude = dispatch.longitude
                         )
                     }
                 }
