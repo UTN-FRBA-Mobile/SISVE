@@ -63,12 +63,12 @@ Guía completa en [`docs/demo/SIMULAR_UBICACION.md`](demo/SIMULAR_UBICACION.md).
 1. Levantar el mock-server (`cd mock-server && npm install && npm start`).
 2. Correr la app en un emulador API 35.
 3. En el emulador: **⋯ (Extended controls) → Location → Routes**, cargar `docs/demo/ruta-demo.gpx` (≈5,7 km por calles de CABA, con varias vueltas) y darle Play.
-4. Login → **Entrar en Servicio** (aceptar permisos) → **Simular llamado** → **Aceptar** → mapa.
+4. Login → **Entrar en Servicio** (aceptar permisos) → generar el llamado con el POST documentado en [`mock-server/README.md`](../mock-server/README.md) → **Aceptar** → mapa.
 
 ## 7. Limitaciones conocidas y pendientes
 
-- **Push de despacho en segundo plano:** depende de FCM (M3). Hoy el llamado se simula desde el Dashboard.
-- **Botones temporales** ("Simular llamado entrante", "Simular llegada") a sacar antes de entregar.
+- **Despacho de prueba:** se genera con un POST al mock-server; el push de despacho en segundo plano depende de FCM (M3).
+- **Botón temporal** ("Simular llegada") a sacar antes de entregar.
 - **Llegada automática:** no hay detección; el paso a PostArrival sigue siendo manual.
 - **Estado al servidor:** `updateStatus` sigue mockeado (M6).
 - **Geocodificación:** puede fallar sin internet o con direcciones ambiguas; el mapa avisa y muestra solo la posición actual.

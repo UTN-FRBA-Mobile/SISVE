@@ -71,7 +71,6 @@
     <string name="logout">Cerrar Sesión</string>
     <string name="dashboard_enter_service">Entrar en Servicio</string>
     <string name="dashboard_leave_service">Salir de Servicio</string>
-    <string name="dashboard_simulate_dispatch">Simular llamado entrante</string>
     <string name="dashboard_unit">Unidad: %1$s</string>
     <string name="dashboard_license_plate">Patente: %1$s</string>
     <string name="status_out_of_service">Fuera de Servicio</string>

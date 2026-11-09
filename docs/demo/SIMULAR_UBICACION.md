@@ -22,7 +22,7 @@ La app usa `LocationManager` con el proveedor GPS, así que funciona con cualqui
 1. Iniciá sesión y presioná **Entrar en Servicio**: aceptá los permisos de ubicación y notificaciones.
 2. Aparece la notificación persistente "SISVE activo" con el botón **Salir de servicio**.
 3. Reproducí la ruta GPX: la ubicación se envía cada N segundos (configurable en Configuración).
-4. Simulá un llamado y aceptalo: el mapa muestra la ambulancia, el destino, la línea y la distancia.
+4. Generá un llamado con el POST documentado en [`mock-server/README.md`](../../mock-server/README.md) y aceptalo: el mapa muestra la ambulancia, el destino, la línea y la distancia.
 
 ## Notas
 - El recorrido por calles lo calcula OSRM (servidor público de demostración) y los tiles los sirve CARTO; si no hay internet, el mapa muestra una línea recta punteada.
