@@ -102,6 +102,10 @@ Luego seleccionar un dispositivo físico o emulador y ejecutar la aplicación.
 
 Para correr el servidor mock de login y fotos (Node.js 22+): `cd mock-server && npm ci && npm start`; API base en `http://127.0.0.1:8585/api/v1/`. Usuarios de demo en `mock-server/demo-users.js` (por ejemplo, `AMB-001` / `123456`). Las fotos se guardan en `mock-server/uploads/` (ignorada por Git).
 
+Para generar solicitudes de emergencia:
+Ejemlo:
+`curl -X POST http://127.0.0.1:8585/internal/v1/ambulances/AMB-001/service-requests`
+
 ## 📄 Licencia
 Este proyecto se distribuye bajo la licencia MIT.
 
