@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { registerTransportDestinations } from './transport-destinations.js';
 
 const serviceRequestsFile = fileURLToPath(new URL('./data/service-requests.json', import.meta.url));
 
@@ -131,6 +132,31 @@ export class ServiceRequestStore {
     });
   }
 
+  async assignTransportDestination(id, ambulanceId, chooseDestination) {
+    return this.#mutate(history => {
+      const serviceRequest = history.find(request => request.id === id);
+
+      if (!serviceRequest) {
+        return { result: { kind: 'not_found' } };
+      }
+
+      if (serviceRequest.ambulanceId !== ambulanceId) {
+        return { result: { kind: 'wrong_ambulance' } };
+      }
+
+      if (serviceRequest.status !== 'ACCEPTED') {
+        return { result: { kind: 'not_accepted' } };
+      }
+
+      if (serviceRequest.transportDestination) {
+        return { result: { kind: 'already_assigned', serviceRequest } };
+      }
+
+      serviceRequest.transportDestination = chooseDestination();
+      return { changed: true, result: { kind: 'assigned', serviceRequest } };
+    });
+  }
+
   async #mutate(mutator) {
     const operation = this.#pendingWrite.then(async () => {
       const history = await this.#read();
@@ -214,6 +240,8 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
     res.locals.session = session;
     next();
   };
+
+  registerTransportDestinations(app, store, requireSession);
 
   const ambulanceStatuses = new Map();
 

@@ -13,7 +13,7 @@ Rama: `feature/miembro-5-foreground-service-gps-mapa`. Este documento resume lo 
    - Hay que recompilar después de agregarla.
 2. **Gradle 8.9.** Android Studio puede ofrecer subir el wrapper a 8.14.x al sincronizar: no aceptarlo, para no ensuciar el repo.
 3. **Emulador:** usar una imagen **API 35 (Android 15) con Google Play**. Las imágenes preview (Android 17 / 16 KB) no renderizan bien y generan ANRs falsos.
-4. **URL del servidor:** el valor por defecto ahora es `http://10.0.2.2:8080/api/v1/` (la PC vista desde el emulador). Con un **celular real** hay que cambiarla en Configuración por la IP de la PC en la misma Wi-Fi.
+4. **URL del servidor:** el valor por defecto ahora es `http://10.0.2.2:8585/api/v1/` (la PC vista desde el emulador). Con un **celular real** hay que cambiarla en Configuración por la IP de la PC en la misma Wi-Fi.
 
 ## 2. Qué hace este módulo
 
@@ -70,7 +70,32 @@ Guía completa en [`docs/demo/SIMULAR_UBICACION.md`](demo/SIMULAR_UBICACION.md).
 - **Despacho de prueba:** se genera con un POST al mock-server; el push de despacho en segundo plano depende de FCM (M3).
 - **Botón temporal** ("Simular llegada") a sacar antes de entregar.
 - **Llegada automática:** no hay detección; el paso a PostArrival sigue siendo manual.
+- **Destino de traslado:** el mock-server ya permite asignar un hospital público de CABA aleatorio cuando se confirma el traslado. La app todavía debe integrarlo (ver contrato abajo).
 - **Estado al servidor:** `updateStatus` sigue mockeado (M6).
 - **Geocodificación:** puede fallar sin internet o con direcciones ambiguas; el mapa avisa y muestra solo la posición actual.
 - **Celulares reales:** algunas marcas (Xiaomi, Samsung, Huawei) pueden cortar el servicio por la optimización de batería. Desactivarla para SISVE si pasa.
 - **Sin tests automáticos** para la lógica de ruta y rumbo todavía.
+
+## 8. Integración pendiente: destino del traslado
+
+El mock-server implementa `POST /api/v1/dispatch/:serviceRequestId/transport-destination`. La app debe llamarlo solo cuando el operador confirme que traslada al paciente, usando el mismo `Authorization: Bearer <token>` que los demás endpoints autenticados. No requiere body.
+
+- Solo se asigna a una solicitud existente, asignada a la ambulancia autenticada y con estado `ACCEPTED`.
+- La primera llamada selecciona al azar uno de estos nueve hospitales públicos de CABA y lo persiste en la solicitud. Los reintentos devuelven el mismo destino.
+- Respuesta `200`:
+  ```json
+  {
+    "dispatchId": "id-de-la-solicitud",
+    "transportDestination": {
+      "id": "hospital-durand",
+      "name": "Hospital Durand",
+      "address": "Av. Díaz Vélez 5044, Caballito, CABA",
+      "latitude": -34.6088669,
+      "longitude": -58.4380107
+    }
+  }
+  ```
+- Errores: `401` sesión inválida, `403` solicitud de otra ambulancia, `404` solicitud inexistente y `409` si todavía no fue aceptada.
+- La solicitud también incluye `transportDestination` al consultarse con `GET /api/v1/dispatch/:serviceRequestId`.
+- El módulo y el catálogo están en `mock-server/transport-destinations.js`; la persistencia se realiza junto al historial en `mock-server/data/service-requests.json`.
+- Para integrar la app: invocar el POST al confirmar traslado y usar la dirección/coordenadas devueltas como destino de la ruta al centro de salud. La selección aleatoria es solo para el mock; no representa disponibilidad, pertinencia clínica ni asignación real.
