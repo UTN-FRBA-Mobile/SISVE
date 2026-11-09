@@ -47,4 +47,10 @@ interface ApiService {
         @Path("id") dispatchId: String,
         @Query("accepted") accepted: Boolean
     ): Response<Unit>
+
+    @GET("/internal/v1/service-requests/history")
+    suspend fun getServiceHistory(
+        @Query("operator_id") operatorId: String,
+        @Query("ambulance_id") ambulanceId: String? = null
+    ): com.utn.sisve.data.remote.dto.ServiceHistoryResponse
 }

@@ -63,6 +63,13 @@ class ApiRepository @Inject constructor(
     suspend fun getDispatch(dispatchId: String): DispatchResponse =
         apiService.getDispatch(dispatchId)
 
+    suspend fun getServiceHistory(
+        operatorId: String,
+        ambulanceId: String? = null
+    ): List<com.utn.sisve.data.remote.dto.ServiceHistoryItemDto> {
+        return apiService.getServiceHistory(operatorId, ambulanceId).serviceRequests
+    }
+
     suspend fun respondDispatch(dispatchId: String, accepted: Boolean) {
         val response = apiService.respondDispatch(dispatchId, accepted)
         if (!response.isSuccessful) {
