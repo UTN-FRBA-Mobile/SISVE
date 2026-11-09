@@ -5,5 +5,6 @@ data class DispatchCall(
     val address: String,
     val emergencyType: String,
     val description: String,
+    val priority: String = "ALTA",
     val timestamp: Long = System.currentTimeMillis()
 )

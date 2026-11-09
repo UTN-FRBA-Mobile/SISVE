@@ -128,7 +128,7 @@ export class ServiceRequestStore {
   }
 }
 
-export function registerServiceRequests(app, store, sessions) {
+export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbulance, sendPush }) {
   const idPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
   const validateAmbulanceId = (ambulanceId, res) => {
     if (!idPattern.test(ambulanceId)) {
@@ -158,6 +158,36 @@ export function registerServiceRequests(app, store, sessions) {
     res.locals.session = session;
     next();
   };
+
+  const ambulanceStatuses = new Map();
+
+  app.post('/api/v1/status', requireSession, (req, res) => {
+    const { status } = req.body ?? {};
+    const ambulanceId = res.locals.session.ambulanceId;
+
+    if (status !== 'EN_SERVICIO' && status !== 'FUERA_DE_SERVICIO') {
+      return res.status(400).json({ error: 'Estado inválido. Debe ser EN_SERVICIO o FUERA_DE_SERVICIO.' });
+    }
+
+    ambulanceStatuses.set(ambulanceId, status);
+    return res.status(200).json({ ambulanceId, status });
+  });
+
+  app.post('/api/v1/notifications/fcm-token', requireSession, (req, res) => {
+    const token = req.body?.token;
+
+    if (
+      !req.body || Array.isArray(req.body) ||
+      typeof token !== 'string' || token.length === 0 || token.length > 4096 ||
+      /\s/.test(token)
+    ) {
+      return res.status(400).json({ error: 'Se requiere un token FCM válido.' });
+    }
+
+    fcmTokensByAmbulance.set(res.locals.session.ambulanceId, token);
+
+    return res.status(204).end();
+  });
 
   app.get('/internal/v1/service-requests/history', async (req, res) => {
     const { operator_id: operatorId, ambulance_id: ambulanceId } = req.query;
@@ -210,18 +240,56 @@ export function registerServiceRequests(app, store, sessions) {
         return res.status(409).json({ error: 'La solicitud ya fue respondida.' });
       }
 
-      return res.status(200).json({ status: result.serviceRequest.status });
+      return res.status(204).end();
     },
   );
+
+  app.get('/api/v1/dispatch/:id', requireSession, async (req, res) => {
+    const history = await store.list();
+    const serviceRequest = history.find(request => request.id === req.params.id);
+
+    if (!serviceRequest) {
+      return res.status(404).json({ error: 'Solicitud de servicio inexistente.' });
+    }
+
+    if (serviceRequest.ambulanceId !== res.locals.session.ambulanceId) {
+      return res.status(403).json({ error: 'La solicitud no está asignada a esta ambulancia.' });
+    }
+
+    return res.json(serviceRequest);
+  });
 
   app.post(
     '/internal/v1/ambulances/:ambulanceId/service-requests',
     validatePathAmbulanceId,
     async (req, res) => {
+      const { ambulanceId } = req.params;
+      const status = ambulanceStatuses.get(ambulanceId) ?? 'FUERA_DE_SERVICIO';
+
+      if (status === 'FUERA_DE_SERVICIO') {
+        return res.status(409).json({
+          error: 'La ambulancia se encuentra fuera de servicio. Entrá en servicio en la app para recibir solicitudes.',
+        });
+      }
+
+      const deviceToken = fcmTokensByAmbulance.get(ambulanceId);
+
+      if (!deviceToken) {
+        return res.status(409).json({
+          error: 'No hay una app registrada para esta ambulancia. Iniciá sesión en la app e intentá nuevamente.',
+        });
+      }
+
+      if (typeof sendPush !== 'function') {
+        return res.status(503).json({
+          error: 'Firebase Admin no está configurado; no se creó la solicitud.',
+        });
+      }
+
       const template = serviceRequestTemplates[randomInt(serviceRequestTemplates.length)];
       const serviceRequest = {
         id: randomUUID(),
-        ambulanceId: req.params.ambulanceId,
+        ambulanceId,
         ...template,
         createdAt: new Date().toISOString(),
         status: 'PENDING',
@@ -229,7 +297,41 @@ export function registerServiceRequests(app, store, sessions) {
 
       await store.append(serviceRequest);
 
-      return res.status(201).json(serviceRequest);
+      try {
+        const messageId = await sendPush({
+          token: deviceToken,
+          data: {
+            dispatchId: serviceRequest.id,
+            ambulanceId: serviceRequest.ambulanceId,
+            title: `Nuevo llamado: ${serviceRequest.emergencyType}`,
+            body: `${serviceRequest.address} — ${serviceRequest.description}`,
+            address: serviceRequest.address,
+            emergencyType: serviceRequest.emergencyType,
+            description: serviceRequest.description,
+            priority: serviceRequest.priority,
+            latitude: String(serviceRequest.latitude),
+            longitude: String(serviceRequest.longitude),
+            createdAt: serviceRequest.createdAt,
+          },
+          android: { priority: 'high' },
+          apns: { payload: { aps: { contentAvailable: true } } },
+        });
+
+        return res.status(201).json({ ...serviceRequest, notification: { messageId } });
+      } catch (error) {
+        if (
+          error.code === 'messaging/registration-token-not-registered' ||
+          error.code === 'messaging/invalid-registration-token'
+        ) {
+          fcmTokensByAmbulance.delete(ambulanceId);
+        }
+
+        console.error(`[Firebase] No se pudo enviar el despacho ${serviceRequest.id}:`, error.code ?? error.message);
+        return res.status(502).json({
+          error: 'La solicitud quedó guardada, pero Firebase no pudo enviar la notificación.',
+          serviceRequestId: serviceRequest.id,
+        });
+      }
     },
   );
 }

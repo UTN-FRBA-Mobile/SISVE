@@ -9,6 +9,7 @@ import com.utn.sisve.domain.model.SessionState
 import com.utn.sisve.location.ActiveDispatchStore
 import com.utn.sisve.location.LocationStore
 import com.utn.sisve.session.SessionManager
+import com.utn.sisve.repository.ApiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,7 @@ class DashboardViewModel @Inject constructor(
     private val ambulanceSession: AmbulanceSession,
     private val sessionManager: SessionManager,
     private val ambulanceStatusStore: AmbulanceStatusStore,
+    private val apiRepository: ApiRepository,
     locationStore: LocationStore,
     activeDispatchStore: ActiveDispatchStore
 ) : ViewModel() {
@@ -87,8 +89,12 @@ class DashboardViewModel @Inject constructor(
                 AmbulanceStatus.EN_SERVICIO -> AmbulanceStatus.FUERA_DE_SERVICIO
             }
             _uiState.update { it.copy(isLoading = true) }
+            try {
+                apiRepository.updateStatus(newStatus)
+            } catch (_: Exception) {
+                // Si falla el servidor, se mantiene el estado local
+            }
             ambulanceStatusStore.setStatus(newStatus)
-            // TODO Miembro 6: notificar al servidor el cambio de estado
             _uiState.update { it.copy(isLoading = false) }
         }
     }

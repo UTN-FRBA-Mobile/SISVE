@@ -82,11 +82,14 @@
     <string name="dispatch_type">Tipo</string>
     <string name="dispatch_location">Ubicación</string>
     <string name="dispatch_description">Descripción</string>
+    <string name="dispatch_priority">Prioridad</string>
 
     <!-- Datos temporales del despacho simulado; no representan datos del servidor -->
     <string name="dispatch_sample_address">Av. Corrientes 1234, CABA</string>
     <string name="dispatch_sample_type">Accidente de tránsito</string>
     <string name="dispatch_sample_description">Colisión entre dos vehículos, posibles heridos</string>
+    <string name="dispatch_load_error">No se pudo cargar esta solicitud de servicio.</string>
+    <string name="dispatch_response_error">No se pudo registrar la respuesta. Intentá nuevamente.</string>
 
     <!-- Mapa y llegada -->
     <string name="map_title">Mapa</string>

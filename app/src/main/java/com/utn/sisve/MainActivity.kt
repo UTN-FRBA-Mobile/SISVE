@@ -37,6 +37,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         observeSessionExpiration()
 
+        val initialDispatchId = intent?.getStringExtra("dispatchId")
+
         setContent {
             SisveTheme {
                 val startDestination = if (ambulanceSession.isConfigured()) {
@@ -45,7 +47,10 @@ class MainActivity : ComponentActivity() {
                     AppRoute.Setup.route
                 }
 
-                AppNavGraph(startDestination = startDestination)
+                AppNavGraph(
+                    startDestination = startDestination,
+                    initialDispatchId = initialDispatchId
+                )
             }
         }
     }

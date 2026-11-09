@@ -12,5 +12,6 @@ data class DispatchResponse(
     val id: String,
     val address: String,
     val emergencyType: String,
-    val description: String
+    val description: String,
+    val priority: String? = null
 )

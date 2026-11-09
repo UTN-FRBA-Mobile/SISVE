@@ -25,9 +25,14 @@ object NetworkModule {
             .addInterceptor(authInterceptor)
             .addInterceptor { chain ->
                 val logging = HttpLoggingInterceptor().apply {
+                    redactHeader("Authorization")
                     // No volcar el JPEG entero en Logcat; conservar BODY para el resto del mock.
                     // TODO: limitar el logging fuera de desarrollo.
-                    level = if (chain.request().body is MultipartBody) {
+                    level = if (
+                        chain.request().body is MultipartBody ||
+                        chain.request().url.encodedPath.endsWith("/notifications/fcm-token") ||
+                        chain.request().url.encodedPath.endsWith("/auth/login")
+                    ) {
                         HttpLoggingInterceptor.Level.HEADERS
                     } else {
                         HttpLoggingInterceptor.Level.BODY

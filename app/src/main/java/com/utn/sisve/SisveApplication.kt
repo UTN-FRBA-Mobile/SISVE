@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import com.utn.sisve.location.LocationServiceController
+import com.utn.sisve.session.AppForegroundTracker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -12,6 +13,7 @@ import javax.inject.Inject
 class SisveApplication : Application() {
 
     @Inject lateinit var locationServiceController: LocationServiceController
+    @Inject lateinit var appForegroundTracker: AppForegroundTracker
 
     override fun onCreate() {
         super.onCreate()
@@ -32,5 +34,6 @@ class SisveApplication : Application() {
 
     companion object {
         const val CHANNEL_TRACKING = "tracking"
+        const val CHANNEL_DISPATCHES = "dispatches"
     }
 }

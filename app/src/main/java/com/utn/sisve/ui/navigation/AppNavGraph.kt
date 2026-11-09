@@ -27,6 +27,7 @@ import com.utn.sisve.ui.setup.SetupScreen
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = AppRoute.Setup.route,
+    initialDispatchId: String? = null,
     viewModel: NavigationViewModel = hiltViewModel()
 ) {
     val session by viewModel.sessionState.collectAsStateWithLifecycle()
@@ -37,6 +38,20 @@ fun AppNavGraph(
         navController.navigate(AppRoute.Login.route) {
             popUpTo(navController.graph.id) { inclusive = true }
             launchSingleTop = true
+        }
+    }
+
+    LaunchedEffect(initialDispatchId, session) {
+        if (!initialDispatchId.isNullOrBlank() && session is SessionState.Active) {
+            navController.navigate(AppRoute.Dispatch.createRoute(initialDispatchId))
+        }
+    }
+
+    LaunchedEffect(session) {
+        viewModel.incomingDispatchStore.incomingDispatch.collect { callId ->
+            if (session is SessionState.Active && viewModel.ambulanceStatusStore.status.value == com.utn.sisve.domain.model.AmbulanceStatus.EN_SERVICIO) {
+                navController.navigate(AppRoute.Dispatch.createRoute(callId))
+            }
         }
     }
 

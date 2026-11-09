@@ -1,6 +1,7 @@
 package com.utn.sisve.data.remote
 
 import com.utn.sisve.data.remote.dto.DispatchResponse
+import com.utn.sisve.data.remote.dto.FcmTokenRequest
 import com.utn.sisve.data.remote.dto.LocationRequest
 import com.utn.sisve.data.remote.dto.LoginRequest
 import com.utn.sisve.data.remote.dto.LoginResponse
@@ -35,9 +36,15 @@ interface ApiService {
     @POST("status")
     suspend fun updateStatus(@Body request: StatusUpdateRequest) : Response<Unit>
 
-    @GET("dispatch")
-    suspend fun getDispatch(): DispatchResponse
+    @POST("notifications/fcm-token")
+    suspend fun registerFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+
+    @GET("dispatch/{id}")
+    suspend fun getDispatch(@Path("id") dispatchId: String): DispatchResponse
 
     @POST("dispatch/{id}/respond")
-    suspend fun respondDispatch( @Path("id") dispatchId: String, @Query("accepted") accepted: Boolean) : Response<Unit>
+    suspend fun respondDispatch(
+        @Path("id") dispatchId: String,
+        @Query("accepted") accepted: Boolean
+    ): Response<Unit>
 }
