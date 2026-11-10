@@ -83,6 +83,11 @@ fun AppNavGraph(
                     navController.navigate(AppRoute.Camera.route) {
                         popUpTo(AppRoute.Login.route) { inclusive = true }
                     }
+                },
+                onReconfigureAmbulance = {
+                    navController.navigate(AppRoute.Setup.route) {
+                        popUpTo(AppRoute.Login.route) { inclusive = true }
+                    }
                 }
             )
         }

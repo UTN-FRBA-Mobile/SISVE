@@ -4,9 +4,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,7 +50,6 @@ fun SettingsScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Card con la información del vehículo actual
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -67,7 +71,6 @@ fun SettingsScreen(
                 }
             }
 
-            // Input: URL de servidor
             OutlinedTextField(
                 value = uiState.serverUrl,
                 onValueChange = viewModel::onServerUrlChange,
@@ -76,7 +79,48 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Input: Intervalo de GPS
+            // Botón de prueba de conectividad y estado
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = viewModel::testConnection,
+                    enabled = uiState.connectionStatus != ConnectionStatus.TESTING
+                ) {
+                    if (uiState.connectionStatus == ConnectionStatus.TESTING) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    } else {
+                        Icon(Icons.Default.NetworkCheck, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Probar Conexión")
+                }
+
+                uiState.connectionMessage?.let { msg ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val isSuccess = uiState.connectionStatus == ConnectionStatus.SUCCESS
+                        Icon(
+                            imageVector = if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Error,
+                            contentDescription = null,
+                            tint = if (isSuccess) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = msg,
+                            color = if (isSuccess) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
             OutlinedTextField(
                 value = uiState.gpsIntervalSeconds,
                 onValueChange = viewModel::onGpsIntervalChange,
@@ -117,7 +161,6 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Botón para desvincular el dispositivo
             OutlinedButton(
                 onClick = { showResetDialog = true },
                 colors = ButtonDefaults.outlinedButtonColors(

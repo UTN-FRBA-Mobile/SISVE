@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
+import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.repository.ApiRepository
 import com.utn.sisve.session.SessionManager
@@ -44,6 +45,7 @@ data class LoginUiState(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val ambulanceSession: AmbulanceSession,
+    private val ambulancePreferences: AmbulancePreferences,
     private val apiRepository: ApiRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -67,6 +69,10 @@ class LoginViewModel @Inject constructor(
 
     fun clearPin() {
         editPin { "" }
+    }
+
+    fun resetAmbulanceConfiguration() {
+        ambulancePreferences.clearAmbulance()
     }
 
     private fun editPin(transform: (String) -> String) {

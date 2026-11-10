@@ -3,6 +3,7 @@ package com.utn.sisve.di
 import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.remote.ApiService
 import com.utn.sisve.data.remote.AuthInterceptor
+import com.utn.sisve.data.remote.DynamicBaseUrlInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,14 +21,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        dynamicBaseUrlInterceptor: DynamicBaseUrlInterceptor
+    ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(dynamicBaseUrlInterceptor) // <-- Reescribe la URL dinámicamente
             .addInterceptor(authInterceptor)
             .addInterceptor { chain ->
                 val logging = HttpLoggingInterceptor().apply {
                     redactHeader("Authorization")
-                    // No volcar el JPEG entero en Logcat; conservar BODY para el resto del mock.
-                    // TODO: limitar el logging fuera de desarrollo.
                     level = if (
                         chain.request().body is MultipartBody ||
                         chain.request().url.encodedPath.endsWith("/notifications/fcm-token") ||
@@ -38,7 +41,6 @@ object NetworkModule {
                         HttpLoggingInterceptor.Level.BODY
                     }
                 }
-
                 logging.intercept(chain)
             }
             .build()
