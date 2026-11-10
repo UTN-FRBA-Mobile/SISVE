@@ -7,3 +7,4 @@ data/fcm-tokens.json
 data/fcm-tokens.json.*.tmp
 *.test.js
 key/
+data/

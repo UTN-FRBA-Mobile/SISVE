@@ -106,11 +106,16 @@ fun HistoryScreen(
 
 @Composable
 private fun HistoryItemCard(item: ServiceHistoryItemDto) {
-    val isAccepted = item.status.equals("ACCEPTED", ignoreCase = true)
+    val isPending = item.status.equals("PENDING", ignoreCase = true)
+    val isRejected = item.status.equals("REJECTED", ignoreCase = true)
+    val isCompleted = item.status.equals("COMPLETED", ignoreCase = true)
 
-    val badgeBg = if (isAccepted) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-    val badgeFg = if (isAccepted) Color(0xFF2E7D32) else Color(0xFFC62828)
-    val statusText = if (isAccepted) "ACEPTADA" else "RECHAZADA"
+    val (badgeBg, badgeFg, statusText) = when {
+        isPending -> Triple(Color(0xFFFFF8E1), Color(0xFFF57F17), "PENDIENTE")
+        isRejected -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "RECHAZADA")
+        isCompleted -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "FINALIZADA")
+        else -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "ACEPTADA")
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -162,14 +167,43 @@ private fun HistoryItemCard(item: ServiceHistoryItemDto) {
                 )
             }
 
-            if (!item.priority.isNullOrBlank()) {
-                Text(
-                    text = "Prioridad: ${item.priority}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+            val formattedDate = formatDate(item.respondedAt ?: item.createdAt)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (formattedDate.isNotBlank()) {
+                    Text(
+                        text = formattedDate,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+
+                if (!item.priority.isNullOrBlank()) {
+                    Text(
+                        text = "Prioridad: ${item.priority}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
+    }
+}
+
+private fun formatDate(isoString: String?): String {
+    if (isoString.isNullOrBlank()) return ""
+    return try {
+        val instant = java.time.Instant.parse(isoString)
+        val formatter = java.time.format.DateTimeFormatter
+            .ofPattern("dd/MM/yyyy HH:mm")
+            .withZone(java.time.ZoneId.systemDefault())
+        formatter.format(instant)
+    } catch (_: Exception) {
+        isoString.take(16).replace("T", " ")
     }
 }

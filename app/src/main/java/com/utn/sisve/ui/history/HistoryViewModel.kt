@@ -46,7 +46,8 @@ class HistoryViewModel @Inject constructor(
 
             try {
                 val history = apiRepository.getServiceHistory(operatorId, ambulanceId)
-                _uiState.update { it.copy(isLoading = false, items = history) }
+                val sortedHistory = history.reversed()
+                _uiState.update { it.copy(isLoading = false, items = sortedHistory) }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {

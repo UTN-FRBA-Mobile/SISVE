@@ -77,6 +77,12 @@ class ApiRepository @Inject constructor(
         }
     }
 
+    suspend fun finalizeDispatch() {
+        try {
+            apiService.finalizeDispatch()
+        } catch (_: Exception) {}
+    }
+
     suspend fun sendPendingLocations() {
         val pending = locationDao.getAll()
         pending.forEach { location ->

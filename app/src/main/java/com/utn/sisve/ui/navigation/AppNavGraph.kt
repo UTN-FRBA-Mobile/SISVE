@@ -160,6 +160,7 @@ fun AppNavGraph(
                     navController.navigate(AppRoute.Map.route)
                 },
                 onFinalizeEmergency = {
+                    viewModel.finalizeEmergency()
                     navController.navigate(AppRoute.Dashboard.route) {
                         popUpTo(AppRoute.Dashboard.route) { inclusive = true }
                     }

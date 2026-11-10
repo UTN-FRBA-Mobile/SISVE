@@ -48,6 +48,9 @@ interface ApiService {
         @Query("accepted") accepted: Boolean
     ): Response<Unit>
 
+    @POST("dispatch/finalize")
+    suspend fun finalizeDispatch(): Response<Unit>
+
     @GET("/internal/v1/service-requests/history")
     suspend fun getServiceHistory(
         @Query("operator_id") operatorId: String,
