@@ -1,8 +1,10 @@
 package com.utn.sisve.ui.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.JsonParseException
+import com.google.firebase.messaging.FirebaseMessaging
+import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.repository.ApiRepository
 import com.utn.sisve.session.SessionManager
@@ -15,7 +17,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 enum class LoginError {
     INVALID_PIN,
@@ -39,6 +45,7 @@ data class LoginUiState(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val ambulanceSession: AmbulanceSession,
+    private val ambulancePreferences: AmbulancePreferences,
     private val apiRepository: ApiRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -62,6 +69,10 @@ class LoginViewModel @Inject constructor(
 
     fun clearPin() {
         editPin { "" }
+    }
+
+    fun resetAmbulanceConfiguration() {
+        ambulancePreferences.clearAmbulance()
     }
 
     private fun editPin(transform: (String) -> String) {
@@ -111,6 +122,7 @@ class LoginViewModel @Inject constructor(
                     operatorName = operator.name
                 )
 
+                registerFcmToken()
                 _uiState.update { it.copy(pin = "", loginSucceeded = true) }
             } catch (error: CancellationException) {
                 throw error
@@ -134,5 +146,42 @@ class LoginViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    private suspend fun registerFcmToken() {
+        try {
+            val registered = withTimeoutOrNull(10_000) {
+                val token = suspendCancellableCoroutine { continuation ->
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!continuation.isActive) {
+                            return@addOnCompleteListener
+                        }
+
+                        if (task.isSuccessful && !task.result.isNullOrBlank()) {
+                            continuation.resume(task.result)
+                        } else {
+                            continuation.resumeWithException(
+                                task.exception ?: IOException("Firebase no devolvió un token FCM.")
+                            )
+                        }
+                    }
+                }
+
+                apiRepository.registerFcmToken(token)
+                true
+            } ?: false
+
+            if (!registered) {
+                Log.e(TAG, "Se agotó el tiempo para registrar el dispositivo FCM.")
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.e(TAG, "No se pudo registrar el dispositivo para recibir notificaciones.", error)
+        }
+    }
+
+    companion object {
+        private const val TAG = "SISVE-Login"
     }
 }

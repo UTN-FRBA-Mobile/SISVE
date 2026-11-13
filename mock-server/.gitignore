@@ -1,2 +1,10 @@
 node_modules/
 .env
+uploads/
+data/service-requests.json
+data/service-requests.json.*.tmp
+data/fcm-tokens.json
+data/fcm-tokens.json.*.tmp
+*.test.js
+key/
+data/

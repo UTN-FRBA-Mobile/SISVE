@@ -1,5 +1,11 @@
 package com.utn.sisve.ui.dashboard
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -10,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.utn.sisve.R
 import androidx.compose.ui.graphics.Color
@@ -33,6 +40,7 @@ fun DashboardScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onDispatchReceived: (String) -> Unit,
+    onNavigateToMap: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -41,6 +49,57 @@ fun DashboardScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { viewModel.loadAmbulanceData() }
+
+    val context = LocalContext.current
+    val gpsEnabled by viewModel.gpsEnabled.collectAsStateWithLifecycle()
+    var showPermissionDenied by remember { mutableStateOf(false) }
+
+    // Paso 2: ubicación en segundo plano (Android 10+ exige pedirla aparte). Si se rechaza,
+    // el servicio igual funciona porque se inicia con la app visible.
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { viewModel.toggleStatus() }
+
+    // Paso 1: ubicación precisa y notificaciones.
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        if (result[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            } else {
+                viewModel.toggleStatus()
+            }
+        } else {
+            showPermissionDenied = true
+        }
+    }
+
+    fun onToggleClicked() {
+        if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
+            viewModel.toggleStatus()
+            return
+        }
+        val permissions = buildList {
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        permissionsLauncher.launch(permissions.toTypedArray())
+    }
+
+    if (showPermissionDenied) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDenied = false },
+            title = { Text(stringResource(R.string.location_permission_title)) },
+            text = { Text(stringResource(R.string.location_permission_message)) },
+            confirmButton = {
+                TextButton(onClick = { showPermissionDenied = false }) {
+                    Text(stringResource(R.string.confirm))
+                }
+            }
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -137,15 +196,46 @@ fun DashboardScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                AmbulanceHeader(
-                    operatorName = operatorName,
-                    ambulanceId = uiState.ambulanceId,
-                    licensePlate = uiState.licensePlate
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    AmbulanceHeader(
+                        operatorName = operatorName,
+                        ambulanceId = uiState.ambulanceId,
+                        licensePlate = uiState.licensePlate
+                    )
+
+                    if (uiState.status == AmbulanceStatus.EN_SERVICIO && (uiState.pendingDispatch != null || uiState.activeDispatch != null)) {
+                        Button(
+                            onClick = {
+                                val pending = uiState.pendingDispatch
+                                val active = uiState.activeDispatch
+                                if (pending != null) {
+                                    onDispatchReceived(pending.id)
+                                } else if (active != null) {
+                                    onNavigateToMap()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFB300),
+                                contentColor = Color(0xFF212121)
+                            )
+                        ) {
+                            Text(
+                                text = "🚨 Emergencia en Curso",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
 
                 StatusIndicator(
                     status = uiState.status,
@@ -157,7 +247,7 @@ fun DashboardScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { viewModel.toggleStatus() },
+                        onClick = { onToggleClicked() },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
@@ -180,13 +270,20 @@ fun DashboardScreen(
                         )
                     }
 
-                    if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
-                        // Botón temporal para simular llamado — sacar antes de entregar
-                        OutlinedButton(
-                            onClick = { onDispatchReceived("TEST-001") },
+                    if (uiState.status == AmbulanceStatus.EN_SERVICIO && !gpsEnabled) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(stringResource(R.string.dashboard_simulate_dispatch))
+                            Column(Modifier.padding(12.dp)) {
+                                Text(
+                                    stringResource(R.string.gps_disabled_warning),
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                TextButton(onClick = {
+                                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                                }) { Text(stringResource(R.string.gps_open_settings)) }
+                            }
                         }
                     }
                 }

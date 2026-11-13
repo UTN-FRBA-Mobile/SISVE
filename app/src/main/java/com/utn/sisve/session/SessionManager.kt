@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 @Singleton
 class SessionManager @Inject constructor(
@@ -122,6 +122,6 @@ class SessionManager @Inject constructor(
     }
 
     companion object {
-        private val INACTIVITY_TIMEOUT_MILLIS = 30.seconds.inWholeMilliseconds
+        private val INACTIVITY_TIMEOUT_MILLIS = 5.minutes.inWholeMilliseconds
     }
 }

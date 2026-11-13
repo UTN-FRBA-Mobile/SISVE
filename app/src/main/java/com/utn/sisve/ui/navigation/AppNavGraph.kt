@@ -27,6 +27,7 @@ import com.utn.sisve.ui.setup.SetupScreen
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = AppRoute.Setup.route,
+    initialDispatchId: String? = null,
     viewModel: NavigationViewModel = hiltViewModel()
 ) {
     val session by viewModel.sessionState.collectAsStateWithLifecycle()
@@ -37,6 +38,20 @@ fun AppNavGraph(
         navController.navigate(AppRoute.Login.route) {
             popUpTo(navController.graph.id) { inclusive = true }
             launchSingleTop = true
+        }
+    }
+
+    LaunchedEffect(initialDispatchId, session) {
+        if (!initialDispatchId.isNullOrBlank() && session is SessionState.Active) {
+            navController.navigate(AppRoute.Dispatch.createRoute(initialDispatchId))
+        }
+    }
+
+    LaunchedEffect(session) {
+        viewModel.incomingDispatchStore.incomingDispatch.collect { callId ->
+            if (session is SessionState.Active && viewModel.ambulanceStatusStore.status.value == com.utn.sisve.domain.model.AmbulanceStatus.EN_SERVICIO) {
+                navController.navigate(AppRoute.Dispatch.createRoute(callId))
+            }
         }
     }
 
@@ -68,6 +83,11 @@ fun AppNavGraph(
                     navController.navigate(AppRoute.Camera.route) {
                         popUpTo(AppRoute.Login.route) { inclusive = true }
                     }
+                },
+                onReconfigureAmbulance = {
+                    navController.navigate(AppRoute.Setup.route) {
+                        popUpTo(AppRoute.Login.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -89,6 +109,9 @@ fun AppNavGraph(
                 onNavigateToLogin = { navigateToLogin() },
                 onDispatchReceived = { callId ->
                     navController.navigate(AppRoute.Dispatch.createRoute(callId))
+                },
+                onNavigateToMap = {
+                    navController.navigate(AppRoute.Map.route)
                 }
             )
         }
@@ -116,7 +139,14 @@ fun AppNavGraph(
                         popUpTo(AppRoute.Dispatch.route) { inclusive = true }
                     }
                 },
-                onRejected = { navController.popBackStack() }
+                onRejected = {
+                    navController.navigate(AppRoute.Dashboard.route) {
+                        popUpTo(AppRoute.Dashboard.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -130,7 +160,15 @@ fun AppNavGraph(
         }
 
         composable(AppRoute.History.route) {
-            HistoryScreen(onNavigateBack = { navController.popBackStack() })
+            HistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDispatch = { callId ->
+                    navController.navigate(AppRoute.Dispatch.createRoute(callId))
+                },
+                onNavigateToMap = {
+                    navController.navigate(AppRoute.Map.route)
+                }
+            )
         }
 
         composable(AppRoute.PostArrival.route) {
@@ -140,6 +178,7 @@ fun AppNavGraph(
                     navController.navigate(AppRoute.Map.route)
                 },
                 onFinalizeEmergency = {
+                    viewModel.finalizeEmergency()
                     navController.navigate(AppRoute.Dashboard.route) {
                         popUpTo(AppRoute.Dashboard.route) { inclusive = true }
                     }

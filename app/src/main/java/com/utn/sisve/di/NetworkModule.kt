@@ -3,10 +3,12 @@ package com.utn.sisve.di
 import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.remote.ApiService
 import com.utn.sisve.data.remote.AuthInterceptor
+import com.utn.sisve.data.remote.DynamicBaseUrlInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -19,12 +21,28 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        dynamicBaseUrlInterceptor: DynamicBaseUrlInterceptor
+    ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(dynamicBaseUrlInterceptor) // <-- Reescribe la URL dinámicamente
             .addInterceptor(authInterceptor)
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY  // TODO: quitar fuera de dev
-            })
+            .addInterceptor { chain ->
+                val logging = HttpLoggingInterceptor().apply {
+                    redactHeader("Authorization")
+                    level = if (
+                        chain.request().body is MultipartBody ||
+                        chain.request().url.encodedPath.endsWith("/notifications/fcm-token") ||
+                        chain.request().url.encodedPath.endsWith("/auth/login")
+                    ) {
+                        HttpLoggingInterceptor.Level.HEADERS
+                    } else {
+                        HttpLoggingInterceptor.Level.BODY
+                    }
+                }
+                logging.intercept(chain)
+            }
             .build()
     }
 

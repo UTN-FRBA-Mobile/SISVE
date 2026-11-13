@@ -1,10 +1,33 @@
 import { randomBytes } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import express from 'express';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 import { demoUsers } from './demo-users.js';
 import { requestLogger } from './request-logger.js';
+import { registerLoginPhotos } from './login-photos.js';
+import { registerServiceRequests, ServiceRequestStore } from './service-requests.js';
 
-export function createApp({ users = demoUsers } = {}) {
+const serviceAccountUrl = new URL('./key/serviceAccountKey.json', import.meta.url);
+let firebaseApp = null;
+
+if (existsSync(serviceAccountUrl)) {
+  const serviceAccount = JSON.parse(readFileSync(serviceAccountUrl));
+  firebaseApp = initializeApp({
+    credential: cert(serviceAccount),
+  });
+  console.log('[Firebase] Firebase Admin SDK inicializado correctamente.');
+} else {
+  console.warn('[Firebase] Aviso: serviceAccountKey.json no fue encontrado.');
+}
+
+export function createApp({
+  users = demoUsers,
+  serviceRequestStore = new ServiceRequestStore(),
+  sendPush = firebaseApp ? message => getMessaging(firebaseApp).send(message) : null,
+} = {}) {
   const usersByAmbulance = new Map();
+  const fcmTokensByAmbulance = new Map();
 
   for (const user of users) {
     if (typeof user.ambulanceId !== 'string' || !user.ambulanceId.trim()) {
@@ -80,6 +103,12 @@ export function createApp({ users = demoUsers } = {}) {
     });
   });
 
+  registerLoginPhotos(app, sessions);
+  registerServiceRequests(app, serviceRequestStore, sessions, {
+    fcmTokensByAmbulance,
+    sendPush,
+  });
+
   app.use((req, res) => {
     res.status(404).json({ error: 'Endpoint no Implementado.' });
   });
@@ -95,6 +124,7 @@ export function createApp({ users = demoUsers } = {}) {
       return res.status(413).json({ error: 'Solicitud demasiado grande.' });
     }
 
+    console.error('Error interno del mock:', error);
     return res.status(500).json({ error: 'Error interno del mock.' });
   });
 

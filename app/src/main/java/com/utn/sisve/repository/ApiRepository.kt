@@ -5,11 +5,13 @@ import com.utn.sisve.data.local.Entity.PendingLocationEntity
 import com.utn.sisve.data.local.db.LocationDao
 import com.utn.sisve.data.remote.ApiService
 import com.utn.sisve.data.remote.dto.DispatchResponse
+import com.utn.sisve.data.remote.dto.FcmTokenRequest
 import com.utn.sisve.data.remote.dto.LocationRequest
 import com.utn.sisve.data.remote.dto.LoginRequest
 import com.utn.sisve.data.remote.dto.LoginResponse
 import com.utn.sisve.domain.model.AmbulanceStatus
 import javax.inject.Inject
+import retrofit2.HttpException
 
 class ApiRepository @Inject constructor(
     private val apiService: ApiService,
@@ -22,6 +24,13 @@ class ApiRepository @Inject constructor(
 
     suspend fun login(ambulanceId: String, pin: String): LoginResponse {
         return apiService.login(LoginRequest(ambulanceId, pin))
+    }
+
+    suspend fun registerFcmToken(token: String) {
+        val response = apiService.registerFcmToken(FcmTokenRequest(token))
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
     }
 
     suspend fun sendLocation(latitude: Double, longitude: Double) {
@@ -45,24 +54,33 @@ class ApiRepository @Inject constructor(
     }
 
     suspend fun updateStatus(status: AmbulanceStatus) {
-        // TODO: modificar cuando este el back
-        // apiService.updateStatus(StatusUpdateRequest(preferences.getAmbulanceId(), status))
+        val response = apiService.updateStatus(com.utn.sisve.data.remote.dto.StatusUpdateRequest(preferences.getAmbulanceId(), status))
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
     }
 
-    suspend fun getDispatch(): DispatchResponse {
-        // TODO: modificar cuando este el back
-        return DispatchResponse(
-            id = "asdjl123as",
-            address = "Av. Medrano 421",
-            emergencyType = "Accidente",
-            description = "Colisión entre una bici y una moto",
-        )
-        // return apiService.getDispatch()
+    suspend fun getDispatch(dispatchId: String): DispatchResponse =
+        apiService.getDispatch(dispatchId)
+
+    suspend fun getServiceHistory(
+        operatorId: String,
+        ambulanceId: String? = null
+    ): List<com.utn.sisve.data.remote.dto.ServiceHistoryItemDto> {
+        return apiService.getServiceHistory(operatorId, ambulanceId).serviceRequests
     }
 
     suspend fun respondDispatch(dispatchId: String, accepted: Boolean) {
-        // TODO: modificar cuando este el back
-        // apiService.respondDispatch(dispatchId, accepted)
+        val response = apiService.respondDispatch(dispatchId, accepted)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+
+    suspend fun finalizeDispatch() {
+        try {
+            apiService.finalizeDispatch()
+        } catch (_: Exception) {}
     }
 
     suspend fun sendPendingLocations() {

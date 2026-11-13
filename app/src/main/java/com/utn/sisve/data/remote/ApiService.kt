@@ -1,14 +1,19 @@
 package com.utn.sisve.data.remote
 
 import com.utn.sisve.data.remote.dto.DispatchResponse
+import com.utn.sisve.data.remote.dto.FcmTokenRequest
 import com.utn.sisve.data.remote.dto.LocationRequest
 import com.utn.sisve.data.remote.dto.LoginRequest
 import com.utn.sisve.data.remote.dto.LoginResponse
 import com.utn.sisve.data.remote.dto.StatusUpdateRequest
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -17,15 +22,38 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
+    @Multipart
+    @POST("access/photo")
+    suspend fun uploadLoginPhoto(
+        @Part("accessId") accessId: RequestBody,
+        @Part("capturedAt") capturedAt: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): Response<Unit>
+
     @POST("location")
     suspend fun sendLocation(@Body request: LocationRequest) : Response<Unit>
 
     @POST("status")
     suspend fun updateStatus(@Body request: StatusUpdateRequest) : Response<Unit>
 
-    @GET("dispatch")
-    suspend fun getDispatch(): DispatchResponse
+    @POST("notifications/fcm-token")
+    suspend fun registerFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+
+    @GET("dispatch/{id}")
+    suspend fun getDispatch(@Path("id") dispatchId: String): DispatchResponse
 
     @POST("dispatch/{id}/respond")
-    suspend fun respondDispatch( @Path("id") dispatchId: String, @Query("accepted") accepted: Boolean) : Response<Unit>
+    suspend fun respondDispatch(
+        @Path("id") dispatchId: String,
+        @Query("accepted") accepted: Boolean
+    ): Response<Unit>
+
+    @POST("dispatch/finalize")
+    suspend fun finalizeDispatch(): Response<Unit>
+
+    @GET("/internal/v1/service-requests/history")
+    suspend fun getServiceHistory(
+        @Query("operator_id") operatorId: String,
+        @Query("ambulance_id") ambulanceId: String? = null
+    ): com.utn.sisve.data.remote.dto.ServiceHistoryResponse
 }

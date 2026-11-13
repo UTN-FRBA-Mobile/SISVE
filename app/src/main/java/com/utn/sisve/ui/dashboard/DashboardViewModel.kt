@@ -6,7 +6,10 @@ import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.data.local.AmbulanceStatusStore
 import com.utn.sisve.domain.model.AmbulanceStatus
 import com.utn.sisve.domain.model.SessionState
+import com.utn.sisve.location.ActiveDispatchStore
+import com.utn.sisve.location.LocationStore
 import com.utn.sisve.session.SessionManager
+import com.utn.sisve.repository.ApiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,19 +18,26 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.utn.sisve.domain.model.DispatchCall
+
 data class DashboardUiState(
     val ambulanceId: String = "",
     val operatorName: String = "",
     val licensePlate: String = "",
     val status: AmbulanceStatus = AmbulanceStatus.FUERA_DE_SERVICIO,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val activeDispatch: DispatchCall? = null,
+    val pendingDispatch: DispatchCall? = null
 )
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val ambulanceSession: AmbulanceSession,
     private val sessionManager: SessionManager,
-    private val ambulanceStatusStore: AmbulanceStatusStore
+    private val ambulanceStatusStore: AmbulanceStatusStore,
+    private val apiRepository: ApiRepository,
+    locationStore: LocationStore,
+    activeDispatchStore: ActiveDispatchStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -35,11 +45,22 @@ class DashboardViewModel @Inject constructor(
     )
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    // Actualizar estado segun ambulanceStatusStore.
+    val gpsEnabled: StateFlow<Boolean> = locationStore.gpsEnabled
+
     init {
         viewModelScope.launch {
             ambulanceStatusStore.status.collect { status ->
                 _uiState.update { it.copy(status = status) }
+            }
+        }
+        viewModelScope.launch {
+            activeDispatchStore.dispatch.collect { dispatch ->
+                _uiState.update { it.copy(activeDispatch = dispatch) }
+            }
+        }
+        viewModelScope.launch {
+            activeDispatchStore.pendingCall.collect { pending ->
+                _uiState.update { it.copy(pendingDispatch = pending) }
             }
         }
     }
@@ -79,8 +100,12 @@ class DashboardViewModel @Inject constructor(
                 AmbulanceStatus.EN_SERVICIO -> AmbulanceStatus.FUERA_DE_SERVICIO
             }
             _uiState.update { it.copy(isLoading = true) }
+            try {
+                apiRepository.updateStatus(newStatus)
+            } catch (_: Exception) {
+                // Si falla el servidor, se mantiene el estado local
+            }
             ambulanceStatusStore.setStatus(newStatus)
-            // TODO Miembro 6: notificar al servidor el cambio de estado
             _uiState.update { it.copy(isLoading = false) }
         }
     }

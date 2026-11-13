@@ -1,6 +1,23 @@
 import { randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 
+function redactSensitiveFields(value) {
+  if (Array.isArray(value)) {
+    return value.map(redactSensitiveFields);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, fieldValue]) => [
+        key,
+        /^(pin|token|fcmToken)$/i.test(key) ? '[REDACTED]' : redactSensitiveFields(fieldValue),
+      ]),
+    );
+  }
+
+  return value;
+}
+
 export function requestLogger(req, res, next) {
   const requestId = randomUUID();
   const started = performance.now();
@@ -30,8 +47,8 @@ export function requestLogger(req, res, next) {
       durationMs: Math.round((performance.now() - started) * 100) / 100,
 
       // Se lee después del parser; nunca se registra el JSON crudo ni los headers.
-      requestBody: req.body,
-      responseBody,
+      requestBody: redactSensitiveFields(req.body),
+      responseBody: redactSensitiveFields(responseBody),
     }));
   });
 

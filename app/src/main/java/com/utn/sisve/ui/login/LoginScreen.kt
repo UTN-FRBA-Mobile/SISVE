@@ -1,5 +1,6 @@
 package com.utn.sisve.ui.login
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +19,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,9 +29,11 @@ import com.utn.sisve.R
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onReconfigureAmbulance: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showReconfigureDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.loginSucceeded) {
         if (uiState.loginSucceeded) {
@@ -121,8 +126,57 @@ fun LoginScreen(
                     )
                 }
 
+                OutlinedButton(
+                    onClick = { showReconfigureDialog = true },
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SyncAlt,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Cambiar o reconfigurar unidad",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
+    }
+
+    if (showReconfigureDialog) {
+        AlertDialog(
+            onDismissRequest = { showReconfigureDialog = false },
+            title = { Text("Reconfigurar ambulancia") },
+            text = {
+                Text("¿Deseas desvincular la unidad ${uiState.ambulanceId} y volver a la pantalla de configuración inicial?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showReconfigureDialog = false
+                        viewModel.resetAmbulanceConfiguration()
+                        onReconfigureAmbulance()
+                    }
+                ) {
+                    Text("Reconfigurar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReconfigureDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

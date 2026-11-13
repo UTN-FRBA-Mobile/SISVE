@@ -44,7 +44,7 @@ class AmbulancePreferences @Inject constructor(
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_GPS_INTERVAL = "gps_interval_seconds"
 
-        const val DEFAULT_URL = "http://192.168.100.9:8080/api/v1/"
+        const val DEFAULT_URL = "http://10.0.2.2:8585/api/v1/"
         const val DEFAULT_GPS_INTERVAL = 10L
     }
 }
