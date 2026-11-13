@@ -24,12 +24,30 @@ class LocationStore @Inject constructor() {
     }
 }
 
-// Despacho aceptado, para que el mapa conozca el destino sin cambiar las rutas de navegación.
+// Despacho aceptado o pendiente, para que el mapa y el dashboard conozcan la emergencia activa.
 @Singleton
 class ActiveDispatchStore @Inject constructor() {
     private val _dispatch = MutableStateFlow<DispatchCall?>(null)
     val dispatch: StateFlow<DispatchCall?> = _dispatch.asStateFlow()
 
-    fun set(call: DispatchCall) { _dispatch.value = call }
-    fun clear() { _dispatch.value = null }
+    private val _pendingCall = MutableStateFlow<DispatchCall?>(null)
+    val pendingCall: StateFlow<DispatchCall?> = _pendingCall.asStateFlow()
+
+    fun set(call: DispatchCall) {
+        _dispatch.value = call
+        _pendingCall.value = null
+    }
+
+    fun setPending(call: DispatchCall) {
+        _pendingCall.value = call
+    }
+
+    fun clearPending() {
+        _pendingCall.value = null
+    }
+
+    fun clear() {
+        _dispatch.value = null
+        _pendingCall.value = null
+    }
 }

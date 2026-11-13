@@ -8,6 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "prestart": "node -e \"require('fs').rmSync('data/service-requests.json', { force: true })\"",
     "start": "node server.js",
     "test": "node --test"
   },

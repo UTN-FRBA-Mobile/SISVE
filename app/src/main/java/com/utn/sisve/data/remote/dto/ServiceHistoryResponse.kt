@@ -16,5 +16,7 @@ data class ServiceHistoryItemDto(
     val description: String,
     val status: String,
     val createdAt: String?,
-    val respondedAt: String?
+    val respondedAt: String?,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

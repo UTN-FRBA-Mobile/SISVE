@@ -1,17 +1,24 @@
 package com.utn.sisve.ui.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.local.AmbulanceStatusStore
 import com.utn.sisve.domain.model.AmbulanceStatus
 import com.utn.sisve.domain.model.SessionState
 import com.utn.sisve.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 enum class SettingsError {
@@ -20,12 +27,21 @@ enum class SettingsError {
     INVALID_GPS_INTERVAL
 }
 
+enum class ConnectionStatus {
+    IDLE,
+    TESTING,
+    SUCCESS,
+    FAILED
+}
+
 data class SettingsUiState(
     val ambulanceId: String = "",
     val licensePlate: String = "",
     val serverUrl: String = "",
     val gpsIntervalSeconds: String = "",
     val isSavedSuccess: Boolean = false,
+    val connectionStatus: ConnectionStatus = ConnectionStatus.IDLE,
+    val connectionMessage: String? = null,
     val error: SettingsError? = null
 )
 
@@ -55,17 +71,74 @@ class SettingsViewModel @Inject constructor(
                 serverUrl = preferences.getServerUrl(),
                 gpsIntervalSeconds = preferences.getGpsIntervalSeconds().toString(),
                 isSavedSuccess = false,
+                connectionStatus = ConnectionStatus.IDLE,
                 error = null
             )
         }
     }
 
     fun onServerUrlChange(url: String) {
-        _uiState.update { it.copy(serverUrl = url, isSavedSuccess = false, error = null) }
+        _uiState.update {
+            it.copy(
+                serverUrl = url,
+                isSavedSuccess = false,
+                connectionStatus = ConnectionStatus.IDLE,
+                error = null
+            )
+        }
     }
 
     fun onGpsIntervalChange(interval: String) {
         _uiState.update { it.copy(gpsIntervalSeconds = interval, isSavedSuccess = false, error = null) }
+    }
+
+    fun testConnection() {
+        val rawUrl = _uiState.value.serverUrl.trim()
+        val parsed = rawUrl.toHttpUrlOrNull()
+        if (parsed == null) {
+            _uiState.update {
+                it.copy(
+                    connectionStatus = ConnectionStatus.FAILED,
+                    connectionMessage = "URL inválida"
+                )
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                connectionStatus = ConnectionStatus.TESTING,
+                connectionMessage = null
+            )
+        }
+
+        viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    val client = OkHttpClient.Builder()
+                        .connectTimeout(4, TimeUnit.SECONDS)
+                        .readTimeout(4, TimeUnit.SECONDS)
+                        .build()
+
+                    val request = Request.Builder().url(parsed).build()
+                    client.newCall(request).execute().use { response ->
+                        val elapsed = System.currentTimeMillis() - startTime
+                        // Cualquier respuesta HTTP recibida (incluso 404) confirma que el host y puerto están vivos
+                        Pair(true, "Conectado ($elapsed ms)")
+                    }
+                } catch (e: Exception) {
+                    Pair(false, "No se pudo conectar con el servidor")
+                }
+            }
+
+            _uiState.update {
+                it.copy(
+                    connectionStatus = if (result.first) ConnectionStatus.SUCCESS else ConnectionStatus.FAILED,
+                    connectionMessage = result.second
+                )
+            }
+        }
     }
 
     fun saveSettings(): Boolean {
@@ -97,7 +170,6 @@ class SettingsViewModel @Inject constructor(
             return false
         }
 
-        // TODO No funciona, Retrofit es singleton y conserva la URL con la que se creó.
         preferences.saveSettings(cleanUrl, interval)
         _uiState.update { it.copy(isSavedSuccess = true, error = null) }
         return true

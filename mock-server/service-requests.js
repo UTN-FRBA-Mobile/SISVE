@@ -157,6 +157,20 @@ export class ServiceRequestStore {
     });
   }
 
+  async finalizeActiveByAmbulance(ambulanceId) {
+    return this.#mutate(history => {
+      let updatedCount = 0;
+      for (const serviceRequest of history) {
+        if (serviceRequest.ambulanceId === ambulanceId && (serviceRequest.status === 'ACCEPTED' || serviceRequest.status === 'PENDING')) {
+          serviceRequest.status = 'COMPLETED';
+          serviceRequest.completedAt = new Date().toISOString();
+          updatedCount++;
+        }
+      }
+      return { changed: updatedCount > 0, result: { updatedCount } };
+    });
+  }
+
   async #mutate(mutator) {
     const operation = this.#pendingWrite.then(async () => {
       const history = await this.#read();
@@ -289,8 +303,6 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
     const history = await store.list();
     const serviceRequests = history.filter(
       serviceRequest =>
-        serviceRequest.status !== 'PENDING' &&
-        serviceRequest.respondedByOperatorId === operatorId &&
         (ambulanceId === undefined || serviceRequest.ambulanceId === ambulanceId),
     );
 
@@ -343,6 +355,12 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
     return res.json(serviceRequest);
   });
 
+  app.post('/api/v1/dispatch/finalize', requireSession, async (req, res) => {
+    const ambulanceId = res.locals.session.ambulanceId;
+    await store.finalizeActiveByAmbulance(ambulanceId);
+    return res.status(200).json({ status: 'COMPLETED' });
+  });
+
   app.post(
     '/internal/v1/ambulances/:ambulanceId/service-requests',
     validatePathAmbulanceId,
@@ -353,6 +371,25 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
       if (status === 'FUERA_DE_SERVICIO') {
         return res.status(409).json({
           error: 'La ambulancia se encuentra fuera de servicio. Entrá en servicio en la app para recibir solicitudes.',
+        });
+      }
+
+      const history = await store.list();
+      const pendingRequest = history.find(
+        request => request.ambulanceId === ambulanceId && request.status === 'PENDING'
+      );
+      if (pendingRequest) {
+        return res.status(409).json({
+          error: 'La ambulancia tiene una solicitud de emergencia pendiente de respuesta.',
+        });
+      }
+
+      const activeEmergency = history.find(
+        request => request.ambulanceId === ambulanceId && request.status === 'ACCEPTED'
+      );
+      if (activeEmergency) {
+        return res.status(409).json({
+          error: 'La ambulancia ya se encuentra atendiendo una emergencia en curso.',
         });
       }
 

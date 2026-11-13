@@ -15,6 +15,7 @@ import com.utn.sisve.SisveApplication
 import com.utn.sisve.data.local.AmbulanceStatusStore
 import com.utn.sisve.domain.model.AmbulanceStatus
 import com.utn.sisve.domain.model.IncomingDispatchStore
+import com.utn.sisve.location.ActiveDispatchStore
 import com.utn.sisve.repository.ApiRepository
 import com.utn.sisve.session.AppForegroundTracker
 import com.utn.sisve.session.SessionManager
@@ -35,6 +36,7 @@ class SisveFirebaseMessagingService : FirebaseMessagingService() {
     @Inject lateinit var incomingDispatchStore: IncomingDispatchStore
     @Inject lateinit var ambulanceStatusStore: AmbulanceStatusStore
     @Inject lateinit var appForegroundTracker: AppForegroundTracker
+    @Inject lateinit var activeDispatchStore: ActiveDispatchStore
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -63,6 +65,11 @@ class SisveFirebaseMessagingService : FirebaseMessagingService() {
 
         if (ambulanceStatusStore.status.value != AmbulanceStatus.EN_SERVICIO) {
             Log.d(TAG, "Mensaje de emergencia omitido: la ambulancia está fuera de servicio.")
+            return
+        }
+
+        if (activeDispatchStore.dispatch.value != null) {
+            Log.d(TAG, "Mensaje de emergencia omitido: la ambulancia ya tiene una emergencia activa en curso.")
             return
         }
 
