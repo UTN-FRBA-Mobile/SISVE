@@ -65,6 +65,7 @@ class DispatchViewModel @Inject constructor(
                     }
                 }
 
+                activeDispatchStore.setPending(call)
                 _uiState.update { it.copy(isLoading = false, call = call) }
             } catch (error: CancellationException) {
                 throw error
@@ -112,6 +113,7 @@ class DispatchViewModel @Inject constructor(
                 if (call.id != "TEST-001") {
                     apiRepository.respondDispatch(call.id, accepted = false)
                 }
+                activeDispatchStore.clearPending()
                 _uiState.update { it.copy(isResponding = false, isRejected = true) }
             } catch (error: CancellationException) {
                 throw error

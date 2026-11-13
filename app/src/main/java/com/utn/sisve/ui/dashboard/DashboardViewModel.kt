@@ -18,12 +18,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.utn.sisve.domain.model.DispatchCall
+
 data class DashboardUiState(
     val ambulanceId: String = "",
     val operatorName: String = "",
     val licensePlate: String = "",
     val status: AmbulanceStatus = AmbulanceStatus.FUERA_DE_SERVICIO,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val activeDispatch: DispatchCall? = null,
+    val pendingDispatch: DispatchCall? = null
 )
 
 @HiltViewModel
@@ -43,13 +47,20 @@ class DashboardViewModel @Inject constructor(
 
     val gpsEnabled: StateFlow<Boolean> = locationStore.gpsEnabled
 
-    // Actualizar estado segun ambulanceStatusStore.
     init {
-        // Al volver al dashboard no hay emergencia en curso.
-        activeDispatchStore.clear()
         viewModelScope.launch {
             ambulanceStatusStore.status.collect { status ->
                 _uiState.update { it.copy(status = status) }
+            }
+        }
+        viewModelScope.launch {
+            activeDispatchStore.dispatch.collect { dispatch ->
+                _uiState.update { it.copy(activeDispatch = dispatch) }
+            }
+        }
+        viewModelScope.launch {
+            activeDispatchStore.pendingCall.collect { pending ->
+                _uiState.update { it.copy(pendingDispatch = pending) }
             }
         }
     }

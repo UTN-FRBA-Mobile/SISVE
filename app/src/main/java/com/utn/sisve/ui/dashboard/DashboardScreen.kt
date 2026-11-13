@@ -40,6 +40,7 @@ fun DashboardScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onDispatchReceived: (String) -> Unit,
+    onNavigateToMap: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -195,15 +196,46 @@ fun DashboardScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                AmbulanceHeader(
-                    operatorName = operatorName,
-                    ambulanceId = uiState.ambulanceId,
-                    licensePlate = uiState.licensePlate
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    AmbulanceHeader(
+                        operatorName = operatorName,
+                        ambulanceId = uiState.ambulanceId,
+                        licensePlate = uiState.licensePlate
+                    )
+
+                    if (uiState.status == AmbulanceStatus.EN_SERVICIO && (uiState.pendingDispatch != null || uiState.activeDispatch != null)) {
+                        Button(
+                            onClick = {
+                                val pending = uiState.pendingDispatch
+                                val active = uiState.activeDispatch
+                                if (pending != null) {
+                                    onDispatchReceived(pending.id)
+                                } else if (active != null) {
+                                    onNavigateToMap()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFB300),
+                                contentColor = Color(0xFF212121)
+                            )
+                        ) {
+                            Text(
+                                text = "🚨 Emergencia en Curso",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
 
                 StatusIndicator(
                     status = uiState.status,
@@ -254,8 +286,6 @@ fun DashboardScreen(
                             }
                         }
                     }
-
-
                 }
             }
         }

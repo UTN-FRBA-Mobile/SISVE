@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.utn.sisve.data.local.AmbulanceSession
 import com.utn.sisve.data.remote.dto.ServiceHistoryItemDto
+import com.utn.sisve.domain.model.DispatchCall
 import com.utn.sisve.domain.model.SessionState
+import com.utn.sisve.location.ActiveDispatchStore
 import com.utn.sisve.repository.ApiRepository
 import com.utn.sisve.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +28,8 @@ data class HistoryUiState(
 class HistoryViewModel @Inject constructor(
     private val apiRepository: ApiRepository,
     private val sessionManager: SessionManager,
-    private val ambulanceSession: AmbulanceSession
+    private val ambulanceSession: AmbulanceSession,
+    private val activeDispatchStore: ActiveDispatchStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -57,6 +60,35 @@ class HistoryViewModel @Inject constructor(
                         error = "No se pudo cargar el historial de servicios."
                     )
                 }
+            }
+        }
+    }
+
+    fun onItemClick(
+        item: ServiceHistoryItemDto,
+        onNavigateToDispatch: (String) -> Unit,
+        onNavigateToMap: () -> Unit
+    ) {
+        val status = item.status.uppercase()
+        when (status) {
+            "ACCEPTED" -> {
+                val call = DispatchCall(
+                    id = item.id,
+                    address = item.address,
+                    emergencyType = item.emergencyType,
+                    description = item.description,
+                    priority = item.priority ?: "ALTA",
+                    latitude = item.latitude,
+                    longitude = item.longitude
+                )
+                activeDispatchStore.set(call)
+                onNavigateToMap()
+            }
+            "PENDING" -> {
+                onNavigateToDispatch(item.id)
+            }
+            else -> {
+                // Finalizada o Rechazada no realizan ninguna acción
             }
         }
     }

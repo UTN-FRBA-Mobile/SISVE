@@ -21,6 +21,7 @@ fun DispatchScreen(
     callId: String,
     onAccepted: () -> Unit,
     onRejected: () -> Unit,
+    onNavigateBack: () -> Unit,
     viewModel: DispatchViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -34,7 +35,7 @@ fun DispatchScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.dispatch_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onRejected) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.navigate_back))
                     }
                 },

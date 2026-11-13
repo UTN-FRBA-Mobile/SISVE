@@ -109,6 +109,9 @@ fun AppNavGraph(
                 onNavigateToLogin = { navigateToLogin() },
                 onDispatchReceived = { callId ->
                     navController.navigate(AppRoute.Dispatch.createRoute(callId))
+                },
+                onNavigateToMap = {
+                    navController.navigate(AppRoute.Map.route)
                 }
             )
         }
@@ -136,7 +139,14 @@ fun AppNavGraph(
                         popUpTo(AppRoute.Dispatch.route) { inclusive = true }
                     }
                 },
-                onRejected = { navController.popBackStack() }
+                onRejected = {
+                    navController.navigate(AppRoute.Dashboard.route) {
+                        popUpTo(AppRoute.Dashboard.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -150,7 +160,15 @@ fun AppNavGraph(
         }
 
         composable(AppRoute.History.route) {
-            HistoryScreen(onNavigateBack = { navController.popBackStack() })
+            HistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDispatch = { callId ->
+                    navController.navigate(AppRoute.Dispatch.createRoute(callId))
+                },
+                onNavigateToMap = {
+                    navController.navigate(AppRoute.Map.route)
+                }
+            )
         }
 
         composable(AppRoute.PostArrival.route) {
