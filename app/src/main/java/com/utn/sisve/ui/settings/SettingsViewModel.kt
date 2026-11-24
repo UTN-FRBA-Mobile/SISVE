@@ -2,10 +2,12 @@ package com.utn.sisve.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.utn.sisve.TokenPreferences
 import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.data.local.AmbulanceStatusStore
 import com.utn.sisve.domain.model.AmbulanceStatus
 import com.utn.sisve.domain.model.SessionState
+import com.utn.sisve.repository.ApiRepository
 import com.utn.sisve.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +51,9 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val preferences: AmbulancePreferences,
     private val sessionManager: SessionManager,
-    private val ambulanceStatusStore: AmbulanceStatusStore
+    private val ambulanceStatusStore: AmbulanceStatusStore,
+    private val tokenPreferences: TokenPreferences,
+    private val apiRepository: ApiRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -180,10 +184,17 @@ class SettingsViewModel @Inject constructor(
             return
         }
 
-        preferences.clearAmbulance()
-        ambulanceStatusStore.setStatus(AmbulanceStatus.FUERA_DE_SERVICIO)
-        sessionManager.logout()
+        val ambulanceId = preferences.getAmbulanceId()
+        val token = tokenPreferences.getFcmToken()
 
-        onResetComplete()
+        viewModelScope.launch {
+            if (ambulanceId.isNotBlank() && token.isNotBlank()) {
+                apiRepository.unlinkAmbulanceToken(ambulanceId, token)
+            }
+            preferences.clearAmbulance()
+            ambulanceStatusStore.setStatus(AmbulanceStatus.FUERA_DE_SERVICIO)
+            sessionManager.logout()
+            onResetComplete()
+        }
     }
 }

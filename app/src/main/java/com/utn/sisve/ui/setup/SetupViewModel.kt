@@ -1,13 +1,17 @@
 package com.utn.sisve.ui.setup
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.utn.sisve.TokenPreferences
 import com.utn.sisve.data.local.AmbulancePreferences
 import com.utn.sisve.domain.model.AmbulanceQrPayload
+import com.utn.sisve.repository.ApiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SetupUiState(
@@ -19,7 +23,9 @@ data class SetupUiState(
 
 @HiltViewModel
 class SetupViewModel @Inject constructor(
-    private val ambulancePreferences: AmbulancePreferences
+    private val ambulancePreferences: AmbulancePreferences,
+    private val tokenPreferences: TokenPreferences,
+    private val apiRepository: ApiRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SetupUiState())
@@ -74,6 +80,15 @@ class SetupViewModel @Inject constructor(
         val state = _uiState.value
         if (state.ambulanceId.isBlank() || state.licensePlate.isBlank()) return false
         ambulancePreferences.saveAmbulanceData(state.ambulanceId, state.licensePlate)
+
+        val fcmToken = tokenPreferences.getFcmToken()
+        if (fcmToken.isNotBlank()) {
+            viewModelScope.launch {
+                try {
+                    apiRepository.linkAmbulanceToken(state.ambulanceId, fcmToken)
+                } catch (_: Exception) {}
+            }
+        }
         return true
     }
 }

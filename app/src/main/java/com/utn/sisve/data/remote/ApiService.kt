@@ -36,8 +36,15 @@ interface ApiService {
     @POST("status")
     suspend fun updateStatus(@Body request: StatusUpdateRequest) : Response<Unit>
 
-    @POST("notifications/fcm-token")
-    suspend fun registerFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+    @POST("notifications/device-token")
+    suspend fun registerDeviceToken(@Body request: FcmTokenRequest): Response<Unit>
+
+    @POST("notifications/ambulances/link-token")
+    suspend fun linkAmbulanceToken(@Body request: com.utn.sisve.data.remote.dto.LinkAmbulanceTokenRequest): Response<Unit>
+
+    @POST("notifications/ambulances/unlink-token")
+    suspend fun unlinkAmbulanceToken(@Body request: com.utn.sisve.data.remote.dto.LinkAmbulanceTokenRequest): Response<Unit>
+
 
     @GET("dispatch/{id}")
     suspend fun getDispatch(@Path("id") dispatchId: String): DispatchResponse

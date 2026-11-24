@@ -258,6 +258,7 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
   registerTransportDestinations(app, store, requireSession);
 
   const ambulanceStatuses = new Map();
+  const registeredDevices = new Set();
 
   app.post('/api/v1/status', requireSession, (req, res) => {
     const { status } = req.body ?? {};
@@ -271,7 +272,7 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
     return res.status(200).json({ ambulanceId, status });
   });
 
-  app.post('/api/v1/notifications/fcm-token', requireSession, (req, res) => {
+  app.post('/api/v1/notifications/device-token', (req, res) => {
     const token = req.body?.token;
 
     if (
@@ -282,7 +283,37 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
       return res.status(400).json({ error: 'Se requiere un token FCM válido.' });
     }
 
-    fcmTokensByAmbulance.set(res.locals.session.ambulanceId, token);
+    registeredDevices.add(token);
+
+    return res.status(204).end();
+  });
+
+  app.post('/api/v1/notifications/ambulances/link-token', (req, res) => {
+    const token = req.body?.token;
+    const ambulanceId = req.body?.ambulanceId;
+
+    if (
+      !req.body || Array.isArray(req.body) ||
+      typeof token !== 'string' || token.length === 0 || token.length > 4096 ||
+      typeof ambulanceId !== 'string' || !idPattern.test(ambulanceId) ||
+      /\s/.test(token)
+    ) {
+      return res.status(400).json({ error: 'Se requiere un token FCM y ambulanceId válidos.' });
+    }
+
+    if (registeredDevices.has(token)) {
+      fcmTokensByAmbulance.set(ambulanceId, token);
+    }
+
+    return res.status(204).end();
+  });
+
+  app.post('/api/v1/notifications/ambulances/unlink-token', (req, res) => {
+    const ambulanceId = req.body?.ambulanceId;
+
+    if (typeof ambulanceId === 'string' && idPattern.test(ambulanceId)) {
+      fcmTokensByAmbulance.delete(ambulanceId);
+    }
 
     return res.status(204).end();
   });

@@ -26,11 +26,28 @@ class ApiRepository @Inject constructor(
         return apiService.login(LoginRequest(ambulanceId, pin))
     }
 
-    suspend fun registerFcmToken(token: String) {
-        val response = apiService.registerFcmToken(FcmTokenRequest(token))
+    suspend fun registerDeviceToken(token: String) {
+        val response = apiService.registerDeviceToken(FcmTokenRequest(token))
         if (!response.isSuccessful) {
             throw HttpException(response)
         }
+    }
+
+    suspend fun linkAmbulanceToken(ambulanceId: String, token: String) {
+        val response = apiService.linkAmbulanceToken(
+            com.utn.sisve.data.remote.dto.LinkAmbulanceTokenRequest(ambulanceId, token)
+        )
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
+    }
+
+    suspend fun unlinkAmbulanceToken(ambulanceId: String, token: String) {
+        try {
+            apiService.unlinkAmbulanceToken(
+                com.utn.sisve.data.remote.dto.LinkAmbulanceTokenRequest(ambulanceId, token)
+            )
+        } catch (_: Exception) {}
     }
 
     suspend fun sendLocation(latitude: Double, longitude: Double) {

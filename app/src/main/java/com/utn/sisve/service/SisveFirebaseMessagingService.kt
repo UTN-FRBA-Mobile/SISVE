@@ -50,7 +50,7 @@ class SisveFirebaseMessagingService : FirebaseMessagingService() {
 
         scope.launch {
             try {
-                apiRepository.registerFcmToken(token)
+                apiRepository.registerDeviceToken(token)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {

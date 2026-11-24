@@ -122,7 +122,7 @@ class LoginViewModel @Inject constructor(
                     operatorName = operator.name
                 )
 
-                registerFcmToken()
+
                 _uiState.update { it.copy(pin = "", loginSucceeded = true) }
             } catch (error: CancellationException) {
                 throw error
@@ -148,38 +148,6 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private suspend fun registerFcmToken() {
-        try {
-            val registered = withTimeoutOrNull(10_000) {
-                val token = suspendCancellableCoroutine { continuation ->
-                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                        if (!continuation.isActive) {
-                            return@addOnCompleteListener
-                        }
-
-                        if (task.isSuccessful && !task.result.isNullOrBlank()) {
-                            continuation.resume(task.result)
-                        } else {
-                            continuation.resumeWithException(
-                                task.exception ?: IOException("Firebase no devolvió un token FCM.")
-                            )
-                        }
-                    }
-                }
-
-                apiRepository.registerFcmToken(token)
-                true
-            } ?: false
-
-            if (!registered) {
-                Log.e(TAG, "Se agotó el tiempo para registrar el dispositivo FCM.")
-            }
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            Log.e(TAG, "No se pudo registrar el dispositivo para recibir notificaciones.", error)
-        }
-    }
 
     companion object {
         private const val TAG = "SISVE-Login"
