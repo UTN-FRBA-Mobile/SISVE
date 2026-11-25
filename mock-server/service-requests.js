@@ -284,6 +284,7 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
     }
 
     registeredDevices.add(token);
+    console.log(`[FCM] Dispositivo registrado con éxito. Total activos: ${registeredDevices.size}`);
 
     return res.status(204).end();
   });
@@ -303,6 +304,9 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
 
     if (registeredDevices.has(token)) {
       fcmTokensByAmbulance.set(ambulanceId, token);
+      console.log(`[FCM] Ambulancia ${ambulanceId} vinculada al dispositivo.`);
+    } else {
+      console.warn(`[FCM] Intento de vincular ${ambulanceId} con un token de dispositivo no registrado.`);
     }
 
     return res.status(204).end();
@@ -313,6 +317,7 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
 
     if (typeof ambulanceId === 'string' && idPattern.test(ambulanceId)) {
       fcmTokensByAmbulance.delete(ambulanceId);
+      console.log(`[FCM] Ambulancia ${ambulanceId} desvinculada del dispositivo.`);
     }
 
     return res.status(204).end();
