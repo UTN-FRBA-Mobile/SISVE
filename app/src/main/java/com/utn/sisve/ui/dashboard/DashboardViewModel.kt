@@ -36,8 +36,8 @@ class DashboardViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val ambulanceStatusStore: AmbulanceStatusStore,
     private val apiRepository: ApiRepository,
-    locationStore: LocationStore,
-    activeDispatchStore: ActiveDispatchStore
+    private val activeDispatchStore: ActiveDispatchStore,
+    locationStore: LocationStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -106,6 +106,24 @@ class DashboardViewModel @Inject constructor(
                 // Si falla el servidor, se mantiene el estado local
             }
             ambulanceStatusStore.setStatus(newStatus)
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    fun cancelEmergencyAndLeaveService() {
+        viewModelScope.launch {
+            if (sessionManager.state.value !is SessionState.Active) {
+                return@launch
+            }
+
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                apiRepository.cancelDispatch()
+                apiRepository.updateStatus(AmbulanceStatus.FUERA_DE_SERVICIO)
+            } catch (_: Exception) {}
+
+            activeDispatchStore.clear()
+            ambulanceStatusStore.setStatus(AmbulanceStatus.FUERA_DE_SERVICIO)
             _uiState.update { it.copy(isLoading = false) }
         }
     }

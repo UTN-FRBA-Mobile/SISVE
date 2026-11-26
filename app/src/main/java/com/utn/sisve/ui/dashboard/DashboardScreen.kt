@@ -53,6 +53,7 @@ fun DashboardScreen(
     val context = LocalContext.current
     val gpsEnabled by viewModel.gpsEnabled.collectAsStateWithLifecycle()
     var showPermissionDenied by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
 
     // Paso 2: ubicación en segundo plano (Android 10+ exige pedirla aparte). Si se rechaza,
     // el servicio igual funciona porque se inicia con la app visible.
@@ -77,6 +78,10 @@ fun DashboardScreen(
 
     fun onToggleClicked() {
         if (uiState.status == AmbulanceStatus.EN_SERVICIO) {
+            if (uiState.activeDispatch != null || uiState.pendingDispatch != null) {
+                showCancelDialog = true
+                return
+            }
             viewModel.toggleStatus()
             return
         }
@@ -96,6 +101,32 @@ fun DashboardScreen(
             confirmButton = {
                 TextButton(onClick = { showPermissionDenied = false }) {
                     Text(stringResource(R.string.confirm))
+                }
+            }
+        )
+    }
+
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("¿Salir de servicio?") },
+            text = { Text("Tenés una emergencia en curso. Si salís de servicio ahora, la emergencia se cancelará.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCancelDialog = false
+                        viewModel.cancelEmergencyAndLeaveService()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Salir y Cancelar Emergencia", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("Continuar en Servicio")
                 }
             }
         )

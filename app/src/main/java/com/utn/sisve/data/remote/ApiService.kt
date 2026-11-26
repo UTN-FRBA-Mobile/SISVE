@@ -58,6 +58,9 @@ interface ApiService {
     @POST("dispatch/finalize")
     suspend fun finalizeDispatch(): Response<Unit>
 
+    @POST("dispatch/cancel")
+    suspend fun cancelDispatch(): Response<Unit>
+
     @GET("/internal/v1/service-requests/history")
     suspend fun getServiceHistory(
         @Query("operator_id") operatorId: String,

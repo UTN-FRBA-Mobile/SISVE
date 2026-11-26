@@ -1,27 +1,7 @@
 import { randomInt } from 'node:crypto';
 
 export const publicHospitals = [
-  {
-    id: 'hospital-pinero',
-    name: 'Hospital Piñero',
-    address: 'Av. Varela 1301, Flores, CABA',
-    latitude: -34.6435413,
-    longitude: -58.4543171,
-  },
-  {
-    id: 'hospital-durand',
-    name: 'Hospital Durand',
-    address: 'Av. Díaz Vélez 5044, Caballito, CABA',
-    latitude: -34.6088669,
-    longitude: -58.4380107,
-  },
-  {
-    id: 'hospital-rivadavia',
-    name: 'Hospital Rivadavia',
-    address: 'Av. General Las Heras 2670, Recoleta, CABA',
-    latitude: -34.5846894,
-    longitude: -58.4016762,
-  },
+
   {
     id: 'hospital-argerich',
     name: 'Hospital Argerich',
@@ -30,40 +10,13 @@ export const publicHospitals = [
     longitude: -58.3655686,
   },
   {
-    id: 'hospital-santojanni',
-    name: 'Hospital Santojanni',
-    address: 'Pilar 950, Liniers, CABA',
-    latitude: -34.6486894,
-    longitude: -58.5150399,
-  },
-  {
     id: 'hospital-tornu',
     name: 'Hospital Tornú',
     address: 'Combatientes de Malvinas 3002, Parque Chas, CABA',
     latitude: -34.5860192,
     longitude: -58.4717026,
   },
-  {
-    id: 'hospital-ramos-mejia',
-    name: 'Hospital Ramos Mejía',
-    address: 'Gral. Urquiza 609, Balvanera, CABA',
-    latitude: -34.6180444,
-    longitude: -58.4101818,
-  },
-  {
-    id: 'hospital-fernandez',
-    name: 'Hospital Fernández',
-    address: 'Cerviño 3356, Palermo, CABA',
-    latitude: -34.5813693,
-    longitude: -58.4069437,
-  },
-  {
-    id: 'hospital-pirovano',
-    name: 'Hospital Pirovano',
-    address: 'Av. Monroe 3555, Coghlan, CABA',
-    latitude: -34.5641411,
-    longitude: -58.4718644,
-  },
+
 ];
 
 export function choosePublicHospital() {
