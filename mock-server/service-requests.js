@@ -8,30 +8,6 @@ const serviceRequestsFile = fileURLToPath(new URL('./data/service-requests.json'
 
 const serviceRequestTemplates = [
   {
-    address: 'Av. Medrano 421, CABA',
-    emergencyType: 'Accidente vial',
-    priority: 'ALTA',
-    description: 'Colisión entre dos vehículos. Se solicita asistencia médica.',
-    latitude: -34.5981,
-    longitude: -58.4202,
-  },
-  {
-    address: 'Av. Rivadavia 5200, CABA',
-    emergencyType: 'Emergencia médica',
-    priority: 'MEDIA',
-    description: 'Persona con malestar general. Se solicita evaluación médica.',
-    latitude: -34.6167,
-    longitude: -58.4231,
-  },
-  {
-    address: 'Parque Centenario, CABA',
-    emergencyType: 'Asistencia en vía pública',
-    priority: 'BAJA',
-    description: 'Se solicita asistencia para una persona caída, consciente.',
-    latitude: -34.6064,
-    longitude: -58.4356,
-  },
-  {
     address: 'Av. Santa Fe 4200, Palermo, CABA',
     emergencyType: 'Emergencia médica',
     priority: 'MEDIA',
@@ -46,14 +22,6 @@ const serviceRequestTemplates = [
     description: 'Motociclista involucrado en una colisión. Se solicita asistencia médica.',
     latitude: -34.6096,
     longitude: -58.4075,
-  },
-  {
-    address: 'Florida 500, San Nicolás, CABA',
-    emergencyType: 'Asistencia en vía pública',
-    priority: 'BAJA',
-    description: 'Persona mayor con mareos en la vía pública. Se solicita evaluación.',
-    latitude: -34.6006,
-    longitude: -58.3765,
   },
   {
     address: 'Av. Callao 1200, Recoleta, CABA',
@@ -71,22 +39,7 @@ const serviceRequestTemplates = [
     latitude: -34.6299940,
     longitude: -58.4701188,
   },
-  {
-    address: 'Av. Cruz 6400, Villa Lugano, CABA',
-    emergencyType: 'Emergencia médica',
-    priority: 'ALTA',
-    description: 'Se solicita traslado y atención para una persona con una lesión en una pierna.',
-    latitude: -34.6835,
-    longitude: -58.4730,
-  },
-  {
-    address: 'Av. del Libertador 500, Retiro, CABA',
-    emergencyType: 'Asistencia en vía pública',
-    priority: 'MEDIA',
-    description: 'Persona descompensada en las inmediaciones de una estación de transporte.',
-    latitude: -34.5874,
-    longitude: -58.3767,
-  },
+
 ];
 
 export class ServiceRequestStore {
@@ -164,6 +117,23 @@ export class ServiceRequestStore {
         if (serviceRequest.ambulanceId === ambulanceId && (serviceRequest.status === 'ACCEPTED' || serviceRequest.status === 'PENDING')) {
           serviceRequest.status = 'COMPLETED';
           serviceRequest.completedAt = new Date().toISOString();
+          updatedCount++;
+        }
+      }
+      return { changed: updatedCount > 0, result: { updatedCount } };
+    });
+  }
+
+  async cancelActiveByAmbulance(ambulanceId, operatorId) {
+    return this.#mutate(history => {
+      let updatedCount = 0;
+      for (const serviceRequest of history) {
+        if (serviceRequest.ambulanceId === ambulanceId && (serviceRequest.status === 'ACCEPTED' || serviceRequest.status === 'PENDING')) {
+          serviceRequest.status = 'CANCELLED';
+          serviceRequest.cancelledAt = new Date().toISOString();
+          if (operatorId) {
+            serviceRequest.respondedByOperatorId = operatorId;
+          }
           updatedCount++;
         }
       }
@@ -258,6 +228,7 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
   registerTransportDestinations(app, store, requireSession);
 
   const ambulanceStatuses = new Map();
+  const registeredDevices = new Set();
 
   app.post('/api/v1/status', requireSession, (req, res) => {
     const { status } = req.body ?? {};
@@ -271,7 +242,7 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
     return res.status(200).json({ ambulanceId, status });
   });
 
-  app.post('/api/v1/notifications/fcm-token', requireSession, (req, res) => {
+  app.post('/api/v1/notifications/device-token', (req, res) => {
     const token = req.body?.token;
 
     if (
@@ -282,7 +253,48 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
       return res.status(400).json({ error: 'Se requiere un token FCM válido.' });
     }
 
-    fcmTokensByAmbulance.set(res.locals.session.ambulanceId, token);
+    registeredDevices.add(token);
+    console.log(`[FCM] Dispositivo registrado con éxito. Total activos: ${registeredDevices.size}`);
+
+    return res.status(204).end();
+  });
+
+  app.post('/api/v1/notifications/ambulances/link-token', (req, res) => {
+    const token = req.body?.token;
+    const ambulanceId = req.body?.ambulanceId;
+
+    if (
+      !req.body || Array.isArray(req.body) ||
+      typeof token !== 'string' || token.length === 0 || token.length > 4096 ||
+      typeof ambulanceId !== 'string' || !idPattern.test(ambulanceId) ||
+      /\s/.test(token)
+    ) {
+      return res.status(400).json({ error: 'Se requiere un token FCM y ambulanceId válidos.' });
+    }
+
+    registeredDevices.add(token);
+
+    // Si este token estaba asignado a otra ambulancia previa, se desvincula automáticamente
+    for (const [existingAmbId, existingToken] of fcmTokensByAmbulance.entries()) {
+      if (existingToken === token && existingAmbId !== ambulanceId) {
+        fcmTokensByAmbulance.delete(existingAmbId);
+        console.log(`[FCM] 🔄 Se desvinculó automáticamente ${existingAmbId} al reasignar el dispositivo a ${ambulanceId}.`);
+      }
+    }
+
+    fcmTokensByAmbulance.set(ambulanceId, token);
+    console.log(`[FCM] 🚑 Ambulancia ${ambulanceId} vinculada al dispositivo.`);
+
+    return res.status(204).end();
+  });
+
+  app.post('/api/v1/notifications/ambulances/unlink-token', (req, res) => {
+    const ambulanceId = req.body?.ambulanceId;
+
+    if (typeof ambulanceId === 'string' && idPattern.test(ambulanceId)) {
+      fcmTokensByAmbulance.delete(ambulanceId);
+      console.log(`[FCM] Ambulancia ${ambulanceId} desvinculada del dispositivo.`);
+    }
 
     return res.status(204).end();
   });
@@ -339,6 +351,13 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
       return res.status(204).end();
     },
   );
+
+  app.post('/api/v1/dispatch/cancel', requireSession, async (req, res) => {
+    const ambulanceId = res.locals.session.ambulanceId;
+    const operatorId = res.locals.session.operatorId;
+    await store.cancelActiveByAmbulance(ambulanceId, operatorId);
+    return res.status(200).json({ status: 'CANCELLED' });
+  });
 
   app.get('/api/v1/dispatch/:id', requireSession, async (req, res) => {
     const history = await store.list();

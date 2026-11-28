@@ -125,15 +125,19 @@ private fun HistoryItemCard(
     val isAccepted = item.status.equals("ACCEPTED", ignoreCase = true)
     val isRejected = item.status.equals("REJECTED", ignoreCase = true)
     val isCompleted = item.status.equals("COMPLETED", ignoreCase = true)
+    val isCancelled = item.status.equals("CANCELLED", ignoreCase = true)
 
     val isClickable = isPending || isAccepted
 
     val yellowBg = Color(0xFFFFB300)
     val yellowFg = Color(0xFF212121)
+    val redBg = Color(0xFFFFEBEE)
+    val redFg = Color(0xFFC62828)
 
     val (badgeBg, badgeFg, statusText) = when {
         isPending -> Triple(yellowBg, yellowFg, "PENDIENTE")
-        isRejected -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "RECHAZADA")
+        isRejected -> Triple(redBg, redFg, "RECHAZADA")
+        isCancelled -> Triple(redBg, redFg, "CANCELADA")
         isCompleted -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "FINALIZADA")
         else -> Triple(yellowBg, yellowFg, "ACEPTADA - EN CURSO")
     }

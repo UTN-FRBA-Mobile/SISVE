@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 
+// Cambiar a 'true' si querés ver las peticiones periódicas de ubicación GPS en la consola
+const LOG_LOCATION_REQUESTS = false;
+
 function redactSensitiveFields(value) {
   if (Array.isArray(value)) {
     return value.map(redactSensitiveFields);
@@ -19,6 +22,11 @@ function redactSensitiveFields(value) {
 }
 
 export function requestLogger(req, res, next) {
+  // Omitir peticiones rutinarias de ubicación para no saturar la consola del servidor
+  if (req.path === '/api/v1/location' && !LOG_LOCATION_REQUESTS) {
+    return next();
+  }
+
   const requestId = randomUUID();
   const started = performance.now();
   const request = { requestId, method: req.method, path: req.path };
