@@ -10,8 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.utn.sisve.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.utn.sisve.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,8 +28,10 @@ fun SetupScreen(
     viewModel: SetupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showError by remember { mutableStateOf(false) }
     var showQrSheet by remember { mutableStateOf(false) }
+    var scannerError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uiState.isAlreadyConfigured) {
         if (uiState.isAlreadyConfigured) onSetupComplete()
@@ -62,6 +65,7 @@ fun SetupScreen(
                 value = uiState.ambulanceId,
                 onValueChange = {
                     showError = false
+                    scannerError = null
                     viewModel.onAmbulanceIdChange(it)
                 },
                 label = { Text(stringResource(R.string.setup_ambulance_id)) },
@@ -81,6 +85,7 @@ fun SetupScreen(
                 value = uiState.licensePlate,
                 onValueChange = {
                     showError = false
+                    scannerError = null
                     viewModel.onLicensePlateChange(it)
                 },
                 label = { Text(stringResource(R.string.setup_license_plate)) },
@@ -103,7 +108,7 @@ fun SetupScreen(
                 )
             }
 
-            uiState.qrError?.let { err ->
+            (scannerError ?: uiState.qrError)?.let { err ->
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = err,
@@ -126,13 +131,41 @@ fun SetupScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            // Escaneo real con cámara mediante Google Code Scanner
             OutlinedButton(
-                onClick = { showQrSheet = true },
+                onClick = {
+                    scannerError = null
+                    QrScannerHelper.scanQrCode(
+                        context = context,
+                        onSuccess = { scannedJson ->
+                            viewModel.applyQrCode(scannedJson)
+                        },
+                        onError = { errorMessage ->
+                            scannerError = errorMessage
+                        }
+                    )
+                },
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 Icon(Icons.Default.QrCodeScanner, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.setup_scan_qr))
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Respaldo simulado para emulador o testing rápido
+            TextButton(
+                onClick = {
+                    scannerError = null
+                    showQrSheet = true
+                }
+            ) {
+                Text(
+                    text = "Usar QR de prueba (Simulado)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
     // Hilt
     implementation(libs.hilt.android)
