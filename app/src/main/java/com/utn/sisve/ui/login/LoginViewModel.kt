@@ -22,6 +22,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import com.utn.sisve.TokenPreferences
 
 enum class LoginError {
     INVALID_PIN,
@@ -47,7 +48,8 @@ class LoginViewModel @Inject constructor(
     private val ambulanceSession: AmbulanceSession,
     private val ambulancePreferences: AmbulancePreferences,
     private val apiRepository: ApiRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val tokenPreferences: TokenPreferences
 ) : ViewModel() {
     // El PIN solo vive en memoria: no usar SavedStateHandle ni preferencias para guardarlo.
     private val _uiState = MutableStateFlow(
@@ -122,6 +124,12 @@ class LoginViewModel @Inject constructor(
                     operatorName = operator.name
                 )
 
+                val fcmToken = tokenPreferences.getFcmToken()
+                if (fcmToken.isNotBlank()) {
+                    try {
+                        apiRepository.linkAmbulanceToken(ambulanceId, fcmToken)
+                    } catch (_: Exception) {}
+                }
 
                 _uiState.update { it.copy(pin = "", loginSucceeded = true) }
             } catch (error: CancellationException) {

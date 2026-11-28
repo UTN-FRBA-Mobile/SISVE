@@ -272,20 +272,18 @@ export function registerServiceRequests(app, store, sessions, { fcmTokensByAmbul
       return res.status(400).json({ error: 'Se requiere un token FCM y ambulanceId válidos.' });
     }
 
-    if (registeredDevices.has(token)) {
-      // Si este token estaba asignado a otra ambulancia previa, se desvincula automáticamente
-      for (const [existingAmbId, existingToken] of fcmTokensByAmbulance.entries()) {
-        if (existingToken === token && existingAmbId !== ambulanceId) {
-          fcmTokensByAmbulance.delete(existingAmbId);
-          console.log(`[FCM] 🔄 Se desvinculó automáticamente ${existingAmbId} al reasignar el dispositivo a ${ambulanceId}.`);
-        }
-      }
+    registeredDevices.add(token);
 
-      fcmTokensByAmbulance.set(ambulanceId, token);
-      console.log(`[FCM] 🚑 Ambulancia ${ambulanceId} vinculada al dispositivo.`);
-    } else {
-      console.warn(`[FCM] Intento de vincular ${ambulanceId} con un token de dispositivo no registrado.`);
+    // Si este token estaba asignado a otra ambulancia previa, se desvincula automáticamente
+    for (const [existingAmbId, existingToken] of fcmTokensByAmbulance.entries()) {
+      if (existingToken === token && existingAmbId !== ambulanceId) {
+        fcmTokensByAmbulance.delete(existingAmbId);
+        console.log(`[FCM] 🔄 Se desvinculó automáticamente ${existingAmbId} al reasignar el dispositivo a ${ambulanceId}.`);
+      }
     }
+
+    fcmTokensByAmbulance.set(ambulanceId, token);
+    console.log(`[FCM] 🚑 Ambulancia ${ambulanceId} vinculada al dispositivo.`);
 
     return res.status(204).end();
   });

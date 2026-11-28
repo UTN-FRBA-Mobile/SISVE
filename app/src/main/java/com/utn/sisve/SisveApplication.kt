@@ -50,19 +50,16 @@ class SisveApplication : Application() {
 
     @Inject lateinit var locationServiceController: LocationServiceController
     @Inject lateinit var appForegroundTracker: AppForegroundTracker
-
     @Inject lateinit var apiRepository: ApiRepository
-
     @Inject lateinit var tokenPreferences: TokenPreferences
+    @Inject lateinit var ambulancePreferences: com.utn.sisve.data.local.AmbulancePreferences
 
     override fun onCreate() {
         super.onCreate()
         createTrackingChannel()
         locationServiceController.observe()
-        if (tokenPreferences.getFcmToken().isBlank()){
-            CoroutineScope(Dispatchers.IO).launch {
-                registerFcmToken()
-            }
+        CoroutineScope(Dispatchers.IO).launch {
+            registerFcmToken()
         }
     }
 
@@ -89,30 +86,44 @@ class SisveApplication : Application() {
 
     private suspend fun registerFcmToken() {
         try {
-            val registered = withTimeoutOrNull(10_000) {
-                val token = suspendCancellableCoroutine { continuation ->
-                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                        if (!continuation.isActive) {
-                            return@addOnCompleteListener
-                        }
+            var token = tokenPreferences.getFcmToken()
 
-                        if (task.isSuccessful && !task.result.isNullOrBlank()) {
-                            continuation.resume(task.result)
-                        } else {
-                            continuation.resumeWithException(
-                                task.exception ?: IOException("Firebase no devolvió un token FCM.")
-                            )
+            if (token.isBlank()) {
+                val fetchedToken = withTimeoutOrNull(10_000) {
+                    suspendCancellableCoroutine { continuation ->
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (!continuation.isActive) return@addOnCompleteListener
+                            if (task.isSuccessful && !task.result.isNullOrBlank()) {
+                                continuation.resume(task.result)
+                            } else {
+                                continuation.resumeWithException(
+                                    task.exception ?: IOException("Firebase no devolvió un token FCM.")
+                                )
+                            }
                         }
                     }
                 }
+                if (!fetchedToken.isNullOrBlank()) {
+                    token = fetchedToken
+                    tokenPreferences.saveFcmToken(token)
+                }
+            }
 
+            if (token.isNotBlank()) {
                 apiRepository.registerDeviceToken(token)
-                tokenPreferences.saveFcmToken(token)
-                true
-            } ?: false
+                Log.d(TAG, "Dispositivo FCM registrado en el servidor.")
 
-            if (!registered) {
-                Log.e(TAG, "Se agotó el tiempo para registrar el dispositivo FCM.")
+                val ambulanceId = ambulancePreferences.getAmbulanceId()
+                if (ambulanceId.isNotBlank()) {
+                    try {
+                        apiRepository.linkAmbulanceToken(ambulanceId, token)
+                        Log.d(TAG, "Ambulancia $ambulanceId vinculada al token FCM en el servidor.")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error al vincular ambulancia con token FCM", e)
+                    }
+                }
+            } else {
+                Log.e(TAG, "No se pudo obtener el token FCM.")
             }
         } catch (error: CancellationException) {
             throw error
