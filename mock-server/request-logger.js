@@ -19,6 +19,11 @@ function redactSensitiveFields(value) {
 }
 
 export function requestLogger(req, res, next) {
+  // Omitir peticiones rutinarias de ubicación para no saturar la consola del servidor
+  if (req.path === '/api/v1/location' && !process.env.DEBUG_LOCATION && !process.env.DEBUG) {
+    return next();
+  }
+
   const requestId = randomUUID();
   const started = performance.now();
   const request = { requestId, method: req.method, path: req.path };
